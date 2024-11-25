@@ -1,0 +1,79 @@
+{% extends 'base/base.html' %}
+
+{% block body %}
+<div class="container p-3">
+    <div class="d-none mt-3 d-lg-block"></div>
+    <form method=post enctype=multipart/form-data>
+        <div class="row">
+            <div class="col">
+                <h1 style="margin-bottom:25px">
+                    <strong><span style="color: #325880">PDB</span><span style="color: #7dacd2">Charges</span></strong>
+                </h1>
+                <strong><span style="color: #325880">PDB</span><span style="color: #7dacd2">Charges</span></strong> is a web application providing partial atomic charges of protein structures from
+                the <a href="https://onlinelibrary.wiley.com/doi/full/10.1002/pro.3289" target="_blank"
+                    rel="noreferrer">Protein Data Bank</a>. The charges are computed by the <a
+                    href="https://pubs.acs.org/doi/10.1021/acs.jctc.7b00118" target="_blank"
+                    rel="noreferrer">the semiempirical quantum mechanical methods GFN1-xTB</a> and reproduce the PBE0/TZVP/CM5 charges. Before computation of the charges, hydrogens are added to the
+                structure by <a href="https://pubs.acs.org/doi/abs/10.1021/acs.jctc.6b00049" target="_blank"
+                    rel="noreferrer">MoleculeKit</a> and TODO at pH 7.2. The details about the methodology and usage are
+                described in the <a href="https://github.com/sb-ncbr/AlphaCharges/wiki" target="_blank"
+                    rel="noreferrer">TODO</a>. This website is free and open to all users and there is no login
+                requirement. Source codes are freely available at <a href="https://github.com/sb-ncbr/AlphaCharges"
+                    target="_blank" rel="noreferrer">GitHub</a> TODO (jaké dát odkazy když jsou dva?).
+            </div>
+        </div>
+        <hr>
+        {% include 'base/flash.html' %}
+        <br>
+        <div class="form-group col-sm-6 col-lg-3 pl-0">
+            <label style="color:black" for="title"><strong>PDB code:</strong></label>
+            <input type="text" name="code" required="required" class="form-control" placeholder="e.g. 1alf, 2pws">
+        </div>
+        <div class="form-group">
+            <button  type="submit" class="btn btn-primary" name="action" value="get charges">Get
+                charges</button>
+        </div>
+    </form>
+    <hr>
+    <div class="row">
+        <div class="col">
+            <h3>Examples</h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4 pl-0">
+            <div class="col">
+                <strong>Example 1: TODO</strong>
+            </div>
+        </div>
+                <div class="col-lg-4 pl-0">
+            <div class="col">
+                <strong>Example 2: TODO</strong>
+            </div>
+        </div>
+        <div class="col-lg-4 pl-0">
+            <div class="col">
+                <strong>Example 3: TODO</strong>
+            </div>
+        </div>
+
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col text-left">
+            <small>
+                Are you interested in a research collaboration? Feel free to
+                <a href="mailto:ondrej.schindler@mail.muni.cz"> contact us</a>.
+            </small>
+        </div>
+    </div>
+    <hr>
+    {% include 'base/elixir.html' %}
+    <hr>
+    {% include 'base/footer.html' %}
+</div>
+{% endblock body %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+<script src="{{ url_for('static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
+{% endblock scripts %}
