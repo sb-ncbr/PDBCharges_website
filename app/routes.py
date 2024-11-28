@@ -17,7 +17,7 @@ root_dir = os.path.dirname(os.path.abspath(__file__))
 @application.route('/', methods=['GET', 'POST'])
 def main_site():
     if request.method == 'POST':
-        code = request.form['code'].strip().lower() # todo na lower
+        code = request.form['code'].strip().lower()
         return redirect(url_for('results', code=code))
     return render_template('index.html')
 
@@ -36,7 +36,7 @@ def results():
         return redirect(url_for('main_site'))
 
     absolute_charges = []
-    for charge in open(f'{data_dir}/charge_calculator/charges.txt', 'r').readlines()[1].split():
+    for charge in open(f'{data_dir}/charge_calculator/charges.txt', 'r').readlines()[0].split():
         try:
             absolute_charges.append(abs(float(charge)))
         except ValueError: # value is "?"
