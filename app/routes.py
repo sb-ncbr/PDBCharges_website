@@ -4,7 +4,8 @@ import zipfile
 from random import random
 from time import sleep, time
 
-from flask import render_template, flash, request, send_from_directory, redirect, url_for, Response, Flask, Markup, jsonify
+from markupsafe import Markup
+from flask import render_template, flash, request, send_from_directory, redirect, url_for, Response, Flask, jsonify
 
 application = Flask(__name__)
 application.jinja_env.trim_blocks = True
@@ -35,18 +36,17 @@ def results():
         flash(message, 'warning')
         return redirect(url_for('main_site'))
 
-    absolute_charges = []
-    for charge in open(f'{data_dir}/charge_calculator/charges.txt', 'r').readlines()[0].split():
-        try:
-            absolute_charges.append(abs(float(charge)))
-        except ValueError: # value is "?"
-            continue
-    chg_range = round(max(absolute_charges), 4)
-    n_ats = len(absolute_charges)
+    charges = open(f'{data_dir}/charge_calculator/charges.txt', 'r').readlines()[0].split()
+    charges_except_none = [float(charge) for charge in charges if charge != "None"]
+    chg_range = round(max([abs(charge) for charge in charges_except_none]), 4)
+    total_charge = round(sum(charges_except_none))
+    n_ats = len(charges)
     return render_template('results.html',
                            code=code,
                            chg_range=chg_range,
-                           n_ats=n_ats)
+                           n_ats=n_ats,
+                           total_charge=total_charge,
+                           non_calculated_atoms = n_ats - len(charges_except_none))
 
 
 

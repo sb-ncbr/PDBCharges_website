@@ -21,11 +21,16 @@
             <strong> PDB code:</strong> <a href="https://www.rcsb.org/structure/{{ code }}" target="_blank"
                 rel="noreferrer"> {{ code }} </a>
         </div>
+
+
         <div class="col-12 mt-1">
             <strong> Number of atoms:</strong> {{ n_ats }}
         </div>
         <div class="col-12 mt-1">
-            <strong> Number of added heavy atoms:</strong> TODO
+            <strong> Number of atoms with uncalculated charge:</strong> {{ non_calculated_atoms }}
+        </div>
+        <div class="col-12 mt-1">
+            <strong> Total charge:</strong> {{ total_charge }}
         </div>
 
     </div>
