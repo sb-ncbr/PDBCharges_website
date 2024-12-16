@@ -13,8 +13,6 @@ application.jinja_env.lstrip_blocks = True
 application.config['SECRET_KEY'] = str(random())
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
-
-
 @application.route('/', methods=['GET', 'POST'])
 def main_site():
     if request.method == 'POST':
@@ -23,11 +21,15 @@ def main_site():
     return render_template('index.html')
 
 
-
 @application.route('/results')
 def results():
     code = request.args.get('code')
     data_dir = f'{root_dir}/calculated_structures/{code}'
+    os.system(f"mkdir {data_dir} ;"
+              f"cd {data_dir} ;"
+              f"wget  https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges/{code}/{code}.cif ;"
+              f"wget  https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges/{code}/output.txt ;"
+              f"wget  https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges/{code}/residual_warnings.json ;")
 
     if not os.path.exists(data_dir):
         message = Markup(
@@ -36,14 +38,14 @@ def results():
         flash(message, 'warning')
         return redirect(url_for('main_site'))
 
-    charges = open(f'{data_dir}/charge_calculator/charges.txt', 'r').readlines()[0].split()
-    charges_except_none = [float(charge) for charge in charges if charge != "None"]
-    total_charge = round(sum(charges_except_none))
-    n_ats = len(charges)
+    # charges = open(f'{data_dir}/charge_calculator/charges.txt', 'r').readlines()[0].split()
+    # charges_except_none = [float(charge) for charge in charges if charge != "None"]
+    # total_charge = round(sum(charges_except_none))
+    # n_ats = len(charges)
     return render_template('results.html',
-                           code=code,
-                           n_ats=n_ats,
-                           total_charge=total_charge)
+                           code=code)
+                           # n_ats=n_ats,
+                           # total_charge=total_charge)
 
 
 
@@ -52,15 +54,13 @@ def download_files():
     code = request.args.get('code')
     data_dir = f'{root_dir}/calculated_structures/{code}' # todo!
     with zipfile.ZipFile(f'{data_dir}/{code}.zip', 'w') as zip:
-        zip.write(f'{data_dir}/charge_calculator/charges.txt', arcname=f'charges.txt')
         zip.write(f'{data_dir}/charge_calculator/{code}.cif', arcname=f'{code}.cif')
-        zip.write(f'{data_dir}/structure_preparer/{code}_prepared.pdb', arcname=f'{code}.pdb')
     return send_from_directory(data_dir, f'{code}_charges.zip', as_attachment=True)
 
 
 @application.route('/structure/<code>')
 def get_structure(code: str):
-    filepath = f'{root_dir}/calculated_structures/{code}/charge_calculator/{code}.cif'
+    filepath = f'{root_dir}/calculated_structures/{code}/{code}.cif'
     return Response(open(filepath, 'r').read(), mimetype='text/plain')
 
 

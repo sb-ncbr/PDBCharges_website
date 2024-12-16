@@ -47,7 +47,7 @@
         <!-- Inhibition of Phospholipase A2 -->
         <div class="col-lg-4 pl-0">
             <div class="col">
-                <strong>Inhibition of Phospholipase A2</strong>
+                <strong>Phospholipase inhibited by ibuprofen</strong>
             </div>
             <div class="col text-align mt-3">
                 <img src="{{ url_for('static', filename='assets/p_glycoprotein.png') }}" alt="P-glycoprotein"
@@ -78,7 +78,7 @@
         <!-- Active site of Lectin PA-IIL -->
         <div class="col-lg-4 pl-0">
             <div class="col">
-                <strong>Active site of Lectin PA-IIL</strong>
+                <strong>Carbohydrate binding lectin</strong>
             </div>
             <div class="col text-align mt-3">
                 <img src="{{ url_for('static', filename='assets/p_glycoprotein.png') }}" alt="P-glycoprotein"
@@ -86,16 +86,16 @@
             </div>
             <div class="col mt-3 text-justify">
                 <small>
-                    Lectin PA-IIL from Pseudomonas aeruginosa is a key virulence factor (<a href="https://doi.org/10.1016/j.micinf.2003.10.016"
+                    Lectin PA-IIL from the bacteria Pseudomonas aeruginosa plays a key role in its pathogenicity (i.e., it can cause cystic fibrosis, which has high mortality) (<a href="https://doi.org/10.1016/j.micinf.2003.10.016"
                         target="_blank" rel="noreferrer">Imberty2004</a>).
-                    Lectin has an unusually high affinity for carbohydrates due to its unique binding mode
-                    involving two calcium ions (<a href="https://doi.org/10.1038/nsb865"
+                    This lectin has an unusually high affinity for carbohydrates due to its unique binding mode involving two calcium ions
+                    (<a href="https://doi.org/10.1038/nsb865"
                         target="_blank" rel="noreferrer">Mitchell2002</a>). The calcium ions form ionic bonds with aspartic
-                    acid residues (chain A: Asp96, Asp99, Asp101 and Asp104) in the protein and with three hydroxyl
-                    groups of the fucose molecule form a stable complex through extensive charge delocalisation.
-                    Unlike most protein-carbohydrate interactions, PA-IIL relies on ionic and coordination bonds with
-                    minimal hydrophobic bonds, presenting the structural role of calcium ions in stabilising the
-                    binding site (<a href="https://doi.org/10.1002/prot.20330"
+                    acid residues (chain A: ASP 96, ASP 99, ASP 101 and ASP 104) in the protein and with three hydroxyl
+                    groups of the fucose molecule (chain A: FUC 999). This interaction results in a stable complex through
+                    extensive charge delocalisation. Unlike most protein-carbohydrate interactions, PA-IIL relies on ionic
+                    and coordination bonds with minimal hydrophobic bonds, presenting the structural role of calcium ions
+                    in stabilising the binding site (<a href="https://doi.org/10.1002/prot.20330"
                         target="_blank" rel="noreferrer">Mitchell2005</a>).
                 </small>
 
@@ -109,9 +109,34 @@
             </div>
         </div>
 
+        <!-- Potassium channel -->
         <div class="col-lg-4 pl-0">
             <div class="col">
-                <strong>Example 3: TODO</strong>
+                <strong>Potassium channel</strong>
+            </div>
+            <div class="col text-align mt-3">
+                <img src="{{ url_for('static', filename='assets/p_glycoprotein.png') }}" alt="P-glycoprotein"
+                    style="height: 200px">
+            </div>
+            <div class="col mt-3 text-justify">
+                <small>
+TASK2 (TWIK-related acid-sensitive K+ channel 2) is a pH-gated ion channel belonging to the two-pore domain K+ (K<sub>2P</sub>)
+                    channel family (<a href="https://doi.org/10.1074/jbc.273.47.30863"
+                        target="_blank" rel="noreferrer">Reyes1998</a>).
+                    This channel maintains cellular homeostasis and regulates physiological
+                    responses to environmental changes. The transmembrane regions of TASK2
+                    are characterised by their nonpolar nature and lack of charge, distinguishing
+                    them from the intracellular and extracellular domains of the protein (<a href="https://doi.org/10.1038/s41586-020-2770-2"
+                        target="_blank" rel="noreferrer">Li2020</a>).
+                </small>
+
+            </div>
+            <div class="col text-center mt-3">
+                <form method=post enctype=multipart/form-data>
+                    <input type="hidden" name="code" value='6wlv1uzv' />
+                    <button type="submit" class="btn btn-primary" name="action"
+                        value="calculate charges">Potassium channel</button>
+                </form>
             </div>
         </div>
 
