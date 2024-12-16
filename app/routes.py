@@ -38,15 +38,12 @@ def results():
 
     charges = open(f'{data_dir}/charge_calculator/charges.txt', 'r').readlines()[0].split()
     charges_except_none = [float(charge) for charge in charges if charge != "None"]
-    chg_range = round(max([abs(charge) for charge in charges_except_none]), 4)
     total_charge = round(sum(charges_except_none))
     n_ats = len(charges)
     return render_template('results.html',
                            code=code,
-                           chg_range=chg_range,
                            n_ats=n_ats,
-                           total_charge=total_charge,
-                           non_calculated_atoms = n_ats - len(charges_except_none))
+                           total_charge=total_charge)
 
 
 

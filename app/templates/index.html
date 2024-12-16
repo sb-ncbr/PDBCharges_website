@@ -13,20 +13,23 @@
                 the <a href="https://onlinelibrary.wiley.com/doi/full/10.1002/pro.3289" target="_blank"
                     rel="noreferrer">Protein Data Bank</a>. The charges are computed by the <a
                     href="https://pubs.acs.org/doi/10.1021/acs.jctc.7b00118" target="_blank"
-                    rel="noreferrer">the semiempirical quantum mechanical methods GFN1-xTB</a> and reproduce the PBE0/TZVP/CM5 charges. Before computation of the charges, hydrogens are added to the
-                structure by <a href="https://pubs.acs.org/doi/abs/10.1021/acs.jctc.6b00049" target="_blank"
-                    rel="noreferrer">MoleculeKit</a> and TODO at pH 7.2. The details about the methodology and usage are
-                described in the <a href="https://github.com/sb-ncbr/AlphaCharges/wiki" target="_blank"
-                    rel="noreferrer">TODO</a>. This website is free and open to all users and there is no login
-                requirement. Source codes are freely available at <a href="https://github.com/sb-ncbr/AlphaCharges"
-                    target="_blank" rel="noreferrer">GitHub</a> TODO (jaké dát odkazy když jsou dva?).
+                    rel="noreferrer">semiempirical quantum mechanical methods GFN1-xTB</a> and reproduce the PBE0/TZVP/CM5 charges.
+                Before computation of the charges, hydrogens are added to the
+                structure by <a href="https://almob.biomedcentral.com/articles/10.1186/s13015-022-00215-x" target="_blank"
+                    rel="noreferrer">Hydride</a> and <a href="https://pubs.acs.org/doi/abs/10.1021/acs.jctc.6b00049" target="_blank"
+                    rel="noreferrer">MoleculeKit</a> at pH 7.2. The positions of the added hydrogens are optimized using the <a href="https://onlinelibrary.wiley.com/doi/full/10.1002/anie.202004239" target="_blank"
+                    rel="noreferrer">GFN-FF force-field</a>. The details about the methodology and usage are
+                described in the <a href="https://github.com/sb-ncbr/PDBCharges_website/wiki" target="_blank"
+                    rel="noreferrer">manual</a>. This website is free and open to all users and there is no login
+                requirement. Source codes are freely available at <a href="https://github.com/sb-ncbr/PDBCharges_website"
+                    target="_blank" rel="noreferrer">GitHub</a>.
             </div>
         </div>
         <hr>
         {% include 'base/flash.html' %}
         <br>
         <div class="form-group col-sm-6 col-lg-3 pl-0">
-            <label style="color:black" for="title"><strong>PDB code:</strong></label>
+            <label style="color:black" for="title"><strong>PDB ID:</strong></label>
             <input type="text" name="code" required="required" class="form-control" placeholder="e.g. 1alf, 2pws">
         </div>
         <div class="form-group">
@@ -41,16 +44,71 @@
         </div>
     </div>
     <div class="row">
+        <!-- Inhibition of Phospholipase A2 -->
         <div class="col-lg-4 pl-0">
             <div class="col">
-                <strong>Example 1: TODO</strong>
+                <strong>Inhibition of Phospholipase A2</strong>
+            </div>
+            <div class="col text-align mt-3">
+                <img src="{{ url_for('static', filename='assets/p_glycoprotein.png') }}" alt="P-glycoprotein"
+                    style="height: 200px">
+            </div>
+            <div class="col mt-3 text-justify">
+                <small>
+                    Phospholipase A2 is an enzyme that occurs in plants, mammals, snakes, and bee venoms.
+                    It catalyses the hydrolysis of the ester bond in phospholipids in the cell membranes.
+                    Hydrolysis products are lysophosphatidic acid and free fatty acids, which can disrupt cellular membranes and
+                    induce inflammatory responses (<a href="https://link.springer.com/article/10.1007/s10557-008-6132-9"
+                        target="_blank" rel="noreferrer">Burke2010</a>). The carboxyl group of ibuprofen interact,
+                    creating an electrostatic bond to lysin (LYS 69) in phospholipase A2 and inhibiting its function.
+                    Based on this knowledge, we can develop therapeutics that can reduce the inflammatory reactions
+                    associated with snakebites (<a href="https://www.sciencedirect.com/science/article/pii/S0301462210002206?via%3Dihub"
+                        target="_blank" rel="noreferrer">Gaspar2010</a>).
+                </small>
+
+            </div>
+            <div class="col text-center mt-3">
+                <form method=post enctype=multipart/form-data>
+                    <input type="hidden" name="code" value='2pws' />
+                    <button type="submit" class="btn btn-primary" name="action"
+                        value="calculate charges">Phospholipase A2</button>
+                </form>
             </div>
         </div>
-                <div class="col-lg-4 pl-0">
+        <!-- Active site of Lectin PA-IIL -->
+        <div class="col-lg-4 pl-0">
             <div class="col">
-                <strong>Example 2: TODO</strong>
+                <strong>Active site of Lectin PA-IIL</strong>
+            </div>
+            <div class="col text-align mt-3">
+                <img src="{{ url_for('static', filename='assets/p_glycoprotein.png') }}" alt="P-glycoprotein"
+                    style="height: 200px">
+            </div>
+            <div class="col mt-3 text-justify">
+                <small>
+                    Lectin PA-IIL from Pseudomonas aeruginosa is a key virulence factor (<a href="https://doi.org/10.1016/j.micinf.2003.10.016"
+                        target="_blank" rel="noreferrer">Imberty2004</a>).
+                    Lectin has an unusually high affinity for carbohydrates due to its unique binding mode
+                    involving two calcium ions (<a href="https://doi.org/10.1038/nsb865"
+                        target="_blank" rel="noreferrer">Mitchell2002</a>). The calcium ions form ionic bonds with aspartic
+                    acid residues (chain A: Asp96, Asp99, Asp101 and Asp104) in the protein and with three hydroxyl
+                    groups of the fucose molecule form a stable complex through extensive charge delocalisation.
+                    Unlike most protein-carbohydrate interactions, PA-IIL relies on ionic and coordination bonds with
+                    minimal hydrophobic bonds, presenting the structural role of calcium ions in stabilising the
+                    binding site (<a href="https://doi.org/10.1002/prot.20330"
+                        target="_blank" rel="noreferrer">Mitchell2005</a>).
+                </small>
+
+            </div>
+            <div class="col text-center mt-3">
+                <form method=post enctype=multipart/form-data>
+                    <input type="hidden" name="code" value='1uzv' />
+                    <button type="submit" class="btn btn-primary" name="action"
+                        value="calculate charges">Lectin PA-IIL</button>
+                </form>
             </div>
         </div>
+
         <div class="col-lg-4 pl-0">
             <div class="col">
                 <strong>Example 3: TODO</strong>
