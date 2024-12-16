@@ -25,16 +25,17 @@ def main_site():
 def results():
     code = request.args.get('code')
     data_dir = f'{root_dir}/calculated_structures/{code}'
+    s3_url = "https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges"
     os.system(f"mkdir {data_dir} ;"
               f"cd {data_dir} ;"
-              f"wget  https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges/{code}/{code}.cif ;"
-              f"wget  https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges/{code}/output.txt ;"
-              f"wget  https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges/{code}/residual_warnings.json ;")
+              f"wget  {s3_url}/{code}/{code}.cif ;"
+              f"wget  {s3_url}/{code}/output.txt ;"
+              f"wget  {s3_url}/{code}/residual_warnings.json ;")
 
-    if not os.path.exists(data_dir):
+    if not os.path.exists(f'{root_dir}/calculated_structures/{code}/{code}.cif'):
         message = Markup(
             f'There is no results for structure with PDB code <strong>{code}</strong>. '
-            f'The structure with PDB code <strong>{code}</strong> is either not found in PDB or partial atomic charges are not calculated yet.')
+            f'The structure with PDB code <strong>{code}</strong> is either not found in PDB or partial atomic charges could not be calculated.')
         flash(message, 'warning')
         return redirect(url_for('main_site'))
 
