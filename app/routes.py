@@ -53,9 +53,9 @@ def results():
 
 @application.route('/download_files')
 def download_files():
-    code = request.args.get('ID')
-    data_dir = f'{root_dir}/calculated_structures/{code}' # todo!
-    with zipfile.ZipFile(f'{data_dir}/{code}.zip', 'w') as zip:
+    code = request.args.get('code')
+    data_dir = f'{root_dir}/calculated_structures/{code}'
+    with zipfile.ZipFile(f'{data_dir}/{code}_charges.zip', 'w') as zip:
         zip.write(f'{data_dir}/{code}.cif', arcname=f'{code}.cif')
         zip.write(f'{data_dir}/residual_warnings.json', arcname=f'residual_warnings.json')
     return send_from_directory(data_dir, f'{code}_charges.zip', as_attachment=True)
