@@ -25,17 +25,20 @@ def main_site():
 def results():
     code = request.args.get('code')
     data_dir = f'{root_dir}/calculated_structures/{code}'
-    s3_url = "https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges"
-    os.system(f"mkdir {data_dir} ;"
-              f"cd {data_dir} ;"
-              f"wget  {s3_url}/{code}/{code}.cif ;"
-              f"wget  {s3_url}/{code}/output.txt ;"
-              f"wget  {s3_url}/{code}/residual_warnings.json ;")
+    if not os.path.isdir(data_dir):
+        s3_url = "https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges"
+        os.system(f"mkdir {data_dir} ;"
+                  f"cd {data_dir} ;"
+                  f"wget  {s3_url}/{code}/{code}.cif ;"
+                  f"wget  {s3_url}/{code}/output.txt ;"
+                  f"wget  {s3_url}/{code}/residual_warnings.json ;")
 
     if not os.path.exists(f'{root_dir}/calculated_structures/{code}/{code}.cif'):
-        message = Markup(
-            f'There is no results for structure with PDB code <strong>{code}</strong>. '
-            f'The structure with PDB code <strong>{code}</strong> is either not found in PDB or partial atomic charges could not be calculated.')
+        message = Markup(f'There is no results for structure with PDB ID <strong>{code}</strong>. The possible causes are:'
+                         f'<ul> '
+                         f'<li>A structure with such a PDB ID does not exist.</li>'
+                         f'<li>The structure with hydrogens has more than 99999 atoms.</li>'
+                         f'<li>The structure is not processable.</li></ul>  ')
         flash(message, 'warning')
         return redirect(url_for('main_site'))
 
@@ -48,22 +51,19 @@ def results():
                            # n_ats=n_ats,
                            # total_charge=total_charge)
 
-
-
 @application.route('/download_files')
 def download_files():
-    code = request.args.get('code')
+    code = request.args.get('ID')
     data_dir = f'{root_dir}/calculated_structures/{code}' # todo!
     with zipfile.ZipFile(f'{data_dir}/{code}.zip', 'w') as zip:
-        zip.write(f'{data_dir}/charge_calculator/{code}.cif', arcname=f'{code}.cif')
+        zip.write(f'{data_dir}/{code}.cif', arcname=f'{code}.cif')
+        zip.write(f'{data_dir}/residual_warnings.json', arcname=f'residual_warnings.json')
     return send_from_directory(data_dir, f'{code}_charges.zip', as_attachment=True)
-
 
 @application.route('/structure/<code>')
 def get_structure(code: str):
     filepath = f'{root_dir}/calculated_structures/{code}/{code}.cif'
     return Response(open(filepath, 'r').read(), mimetype='text/plain')
-
 
 @application.errorhandler(404)
 def page_not_found(error):
