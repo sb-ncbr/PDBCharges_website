@@ -12,14 +12,25 @@
     <div class="row">
         <div class="col">
             <h1 style="margin-bottom:25px">
-                <strong><span style="color: #325880">PDB</span><span style="color: #7dacd2">Charges</span></strong>
+
+                <a href="https://pdbcharges.biodata.ceitec.cz/" rel="noreferrer"><strong><span style="color: #325880">PDB</span><span style="color: #7dacd2">Charges</span></strong></a>
             </h1>
         </div>
     </div>
     <div class="row">
         <div class="col-12 mt-0">
-            <strong> PDB code:</strong> <a href="https://www.rcsb.org/structure/{{ code }}" target="_blank"
+            <strong> PDB ID:</strong> <a href="https://www.rcsb.org/structure/{{ code }}" target="_blank"
                 rel="noreferrer"> {{ code }} </a>
+        </div>
+
+        <div class="col-12 mt-1">
+            <strong> Number of atoms:</strong> {{ n_ats }}
+        </div>
+        <div class="col-12 mt-1">
+            <strong> Total charge:</strong> {{ total_charge }}
+        </div>
+        <div class="col-12 mt-1">
+            <strong> Number of atoms for which the partial atomic charge calculation failed:</strong> {{ num_of_non_charge_atoms }}
         </div>
 
     </div>
@@ -32,15 +43,15 @@
                     <div class="form-check form-check-inline col" title="Cartoon representation">
                         <input class="form-check-input" type="radio" name="view" id="view_cartoon" value="Cartoon"
                             checked>
-                        <label class="form-check-label" for="view_cartoon">Cartoon</label>
+                        <label class="form-check-label" for="view_cartoon">Cartoon with residue charges</label>
                     </div>
                     <div class="form-check form-check-inline col" title="Surface representation">
                         <input class="form-check-input" type="radio" name="view" id="view_surface" value="Surface">
-                        <label class="form-check-label" for="view_surface">Surface</label>
+                        <label class="form-check-label" for="view_surface">Surface with atom charges</label>
                     </div>
                     <div class="form-check form-check-inline col" title="Ball & Stick representation">
                         <input class="form-check-input" type="radio" name="view" id="view_bas" value="Ball & Stick">
-                        <label class="form-check-label" for="view_bas">Ball & Stick</label>
+                        <label class="form-check-label" for="view_bas">Ball & Stick with atom charges</label>
                     </div>
                 </div>
             </fieldset>

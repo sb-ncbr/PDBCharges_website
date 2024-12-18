@@ -2,7 +2,8 @@ import json
 import os
 import zipfile
 from random import random
-from time import sleep, time
+from datetime import datetime
+import requests
 
 from markupsafe import Markup
 from flask import render_template, flash, request, send_from_directory, redirect, url_for, Response, Flask, jsonify
@@ -23,33 +24,49 @@ def main_site():
 
 @application.route('/results')
 def results():
-    code = request.args.get('code')
+    code = request.args.get('code').lower()
+    with open(f'{root_dir}/calculated_structures/accesses.txt', 'a') as log_file:
+        log_file.write(f'{request.remote_addr} {code} {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}\n')
     data_dir = f'{root_dir}/calculated_structures/{code}'
     if not os.path.isdir(data_dir):
-        s3_url = "https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges"
         os.system(f"mkdir {data_dir} ;"
-                  f"cd {data_dir} ;"
-                  f"wget  {s3_url}/{code}/{code}.cif ;"
-                  f"wget  {s3_url}/{code}/output.txt ;"
-                  f"wget  {s3_url}/{code}/residual_warnings.json ;")
+                  f"cd {data_dir} ")
+        s3_url = "https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges"
+        for file in [f"{code}.cif",
+                     f"output.txt",
+                     f"residual_warnings.json"]:
+            response = requests.get(f'{s3_url}/{code}/{file}')
+            if response.status_code == 200:
+                with open(f'{data_dir}/{file}', 'w') as pdb_file:
+                    pdb_file.write(response.text)
+    print(f"test1 {os.path.exists(f'{root_dir}/calculated_structures/{code}/{code}.cif')}")
 
     if not os.path.exists(f'{root_dir}/calculated_structures/{code}/{code}.cif'):
+        print(f"test2 {os.path.exists(f'{root_dir}/calculated_structures/{code}/{code}.cif')}")
         message = Markup(f'There is no results for structure with PDB ID <strong>{code}</strong>. The possible causes are:'
                          f'<ul> '
                          f'<li>A structure with such a PDB ID does not exist.</li>'
                          f'<li>The structure with hydrogens has more than 99999 atoms.</li>'
-                         f'<li>The structure is not processable.</li></ul>  ')
+                         f'<li>The structure contains serious errors and cannot be used as input for calculating the partial atomic charge.</li></ul>  ')
         flash(message, 'warning')
         return redirect(url_for('main_site'))
 
-    # charges = open(f'{data_dir}/charge_calculator/charges.txt', 'r').readlines()[0].split()
-    # charges_except_none = [float(charge) for charge in charges if charge != "None"]
-    # total_charge = round(sum(charges_except_none))
-    # n_ats = len(charges)
+    with open(f"{data_dir}/{code}.cif", "r") as cif_file:
+        charges = []
+        lines = [line.strip() for line in cif_file.readlines()[::-1]]
+        for line in lines:
+            if line == "_sb_ncbr_partial_atomic_charges.charge":
+                break
+            charges.append(line.split()[2])
+    charges_except_none = [float(charge) for charge in charges if charge != "?"]
+    print(sum(charges_except_none))
+    total_charge = round(sum(charges_except_none))
+    n_ats = len(charges)
     return render_template('results.html',
-                           code=code)
-                           # n_ats=n_ats,
-                           # total_charge=total_charge)
+                           code=code,
+                           n_ats=n_ats,
+                           total_charge=total_charge,
+                           num_of_non_charge_atoms=n_ats-len(charges_except_none))
 
 @application.route('/download_files')
 def download_files():
