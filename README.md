@@ -1,8 +1,6 @@
 <div align="center">
   <br>
-  <br>
   <a href="https://github.com/sb-ncbr/PDBCharges_website"><img src="https://github.com/sb-ncbr/PDBCharges_website/blob/main/app/static/assets/logo.png" alt="AlphaCharges" width="220"></a>
-  <br>
   <br>
 </div>
 
