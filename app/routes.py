@@ -58,8 +58,6 @@ def results():
     if not os.path.isdir(data_dir):
         download_data(code)
     if not os.path.exists(f'{root_dir}/calculated_structures/{code}/{code}.cif'):
-
-        log_access(request, code)
         message = Markup(
             f'There is no results for structure with PDB ID <strong>{code}</strong>. The possible causes are:'
             f'<ul> '
