@@ -17,6 +17,7 @@
             </h1>
         </div>
     </div>
+    {% include 'base/flash.html' %}
     <div class="row">
         <div class="col-12 mt-0">
             <strong> PDB ID:</strong> <a href="https://www.rcsb.org/structure/{{ code }}" target="_blank"
@@ -114,4 +115,6 @@
     const structure_url = '{{ url_for("get_structure", code=code) }}';
     init_results(structure_url, '{{ code }}');
 </script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+<script src="{{ url_for('static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
 {% endblock scripts %}
