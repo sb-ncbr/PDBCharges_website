@@ -3,6 +3,7 @@ import os
 import zipfile
 from random import random
 from datetime import datetime
+from openbabel import openbabel
 import requests
 
 from markupsafe import Markup
@@ -88,10 +89,51 @@ def results():
 def download_files():
     code = request.args.get('code')
     data_dir = f'{root_dir}/calculated_structures/{code}'
+
+    # create txt file
+    with open(f"{data_dir}/{code}.cif", "r") as cif_file:
+        charges = []
+        lines = [line.strip() for line in cif_file.readlines()[::-1]]
+        for line in lines:
+            if line == "_sb_ncbr_partial_atomic_charges.charge":
+                break
+            charges.append(line.split()[2])
+    charges = charges[::-1]
+    with open(f"{data_dir}/{code}_charges.txt", "w") as txt_file:
+        txt_file.write(f"{code}\n{' '.join(charges)}")
+
+    # create pqr file
+    obConversion = openbabel.OBConversion()
+    obConversion.SetInAndOutFormats("cif", "pqr")
+    mol = openbabel.OBMol()
+    obConversion.ReadFile(mol, f'{data_dir}/{code}.cif')
+    obConversion.WriteFile(mol, f'{data_dir}/{code}.pqr')
+
+
+    with open(f'{data_dir}/{code}.pqr') as pqr_file:
+        pqr_file_lines = pqr_file.readlines()
+    c = 0
+    new_lines = []
+    for line in pqr_file_lines:
+        if line[:4] == 'ATOM':
+            charge = charges[c]
+            try:
+                charge = float(charge)
+                new_lines.append(line[:54] + '{:>8.4f}'.format(charge) + line[62:])
+            except ValueError:
+                new_lines.append(line[:54] + '  ?         ' + line[66:])
+            c += 1
+        else:
+            new_lines.append(line)
+    with open(f'{data_dir}/{code}.pqr', "w") as pqr_file:
+        pqr_file.write(''.join(new_lines))
+
     try:
         with zipfile.ZipFile(f'{data_dir}/{code}_charges.zip', 'w') as zip:
             zip.write(f'{data_dir}/{code}.cif', arcname=f'{code}.cif')
             zip.write(f'{data_dir}/residual_warnings.json', arcname=f'residual_warnings.json')
+            zip.write(f'{data_dir}/{code}_charges.txt', arcname=f'{code}_charges.txt')
+            zip.write(f'{data_dir}/{code}.pqr', arcname=f'{code}.pqr')
         return send_from_directory(data_dir, f'{code}_charges.zip', as_attachment=True)
     except FileNotFoundError:
         return render_template('404.html'), 404
