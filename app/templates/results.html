@@ -106,8 +106,9 @@
     <hr>
     <div class="row">
         <div class="col-7">
-            <a href="{{ url_for('download_files', code=code) }}" class="btn btn-success" id="download">Download charges and
+            <a href="{{ url_for('download_files', code=code) }}" class="btn btn-success mb-2" id="download">Download charges and
                 protonated structure</a>
+            {% include 'table.html' %}
         </div>
         <div class="col text-right">
             <a href="{{ url_for('main_site') }}" class="btn btn-primary">Back to main page</a>
@@ -118,14 +119,16 @@
 </div>
 {% endblock body %}
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
 <script src="{{ url_for('static', filename='molstar/molstar.js') }}"></script>
 <script src="{{ url_for('static', filename='main.js') }}"></script>
+<script src="{{ url_for('static', filename='table.js') }}"></script>
 <script>
     const structure_url = '{{ url_for("get_structure", code=code) }}';
     const warnings = {{ warnings|tojson|safe }};
     
     init_results(structure_url, warnings);
+    init_table(warnings);
 </script>
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
 <script src="{{ url_for('static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
 {% endblock scripts %}
