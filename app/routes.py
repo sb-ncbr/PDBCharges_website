@@ -79,10 +79,15 @@ def results():
     charges_except_none = [float(charge) for charge in charges if charge != "?"]
     total_charge = round(sum(charges_except_none))
     n_ats = len(charges)
+    
+    with open(f"{data_dir}/residual_warnings.json", "r", encoding="utf-8") as warnings_file:
+        warnings = json.load(warnings_file)
+    
     return render_template('results.html',
                            code=code,
                            n_ats=n_ats,
                            total_charge=total_charge,
+                           warnings=warnings,
                            num_of_non_charge_atoms=n_ats-len(charges_except_none))
 
 @application.route('/download_files')
