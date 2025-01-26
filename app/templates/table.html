@@ -15,14 +15,11 @@
     tabindex="-1"
     role="dialog"
     aria-labelledby="tableModalLabel"
-    aria-hidden="true"
   >
     <div class="modal-dialog modal-xl" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="tableModalLabel">
-            Residual Warnings
-          </h5>
+          <h5 class="modal-title" id="tableModalLabel">Residual Warnings</h5>
           <button
             type="button"
             class="close"
@@ -40,6 +37,7 @@
                 id="searchInput"
                 class="form-control"
                 placeholder="Search..."
+                aria-label="Search residual warnings"
               />
             </div>
           </div>
@@ -61,7 +59,7 @@
 
           <div class="row">
             <div class="col">
-              <nav>
+              <nav aria-label="Table pagination">
                 <ul
                   class="pagination justify-content-center"
                   id="pagination"
