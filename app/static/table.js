@@ -1,125 +1,104 @@
 "use strict";
 
-// Constants
-const ITEMS_PER_PAGE = 5;
+const itemsPerPage = 10;
 let currentPage = 1;
-let filteredData = [];
 
-// Initialize
 function init_table(warnings) {
-    const sortedWarnings = warnings.sort((a ,b) => a.residue_id - b.residue_id)
-    if (warnings.length === 0) {
-        $('#modalTrigger').hide()
-        return;
-    }
-    filteredData = [...sortedWarnings]
-    renderTable();
-    $("#searchInput").on("input", handleSearch);
+    const sortedWarnings = warnings.sort((a, b) => a.residue_id - b.residue_id)
 
-    // Reset page when modal is hidden
-    $("#tableModal").on("hidden.bs.modal", () => {
-        currentPage = 1;
-        $("#searchInput").val("");
-        filteredData = [...sortedWarnings];
-        renderTable();
+    setupDialog();
+    displayData(sortedWarnings);
+    setupPagination(sortedWarnings);
+}
+
+function setupDialog() {
+    const dialog = document.getElementById('tableDialog');
+    dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+            dialog.close();
+        }
     });
 }
 
-// Handle search
-function handleSearch(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    filteredData = filteredData.filter((item) =>
-        Object.values(item).some((value) =>
-            value.toString().toLowerCase().includes(searchTerm)
-        )
-    );
-    currentPage = 1;
-    renderTable();
+function openDialog() {
+    const dialog = document.getElementById('tableDialog');
+    dialog.showModal();
 }
 
-function handleButtonClick(item) {
-    $('#tableModal').modal('hide');
-    molstar.behavior.focus(item);
+function closeDialog() {
+    const dialog = document.getElementById('tableDialog');
+    dialog.close();
 }
 
-function renderTable() {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
-
-    // Render table body
-    const tableBody = $("#tableBody");
-    tableBody.html(
-        paginatedData
-            .map(
-                (item) => `
-                <tr>
-                    <td>${item.chain_id}</td>
-                    <td>${item.residue_id}</td>
-                    <td>${item.residue_name}</td>
-                    <td>
-                        <span class="badge ${item.warning === "None"
-                        ? "badge-success"
-                        : "badge-warning"
-                    }">
-                            ${item.warning}
-                        </span>
-                    </td>
-                    <td>
-                        <button 
-                            type="button" 
-                            class="btn btn-sm btn-info"
-                            onclick='handleButtonClick(${JSON.stringify(item)})'
-                        >
-                            Show
-                        </button>
-                    </td>
-                </tr>
-            `
-            )
-            .join("")
-    );
-
-    // Render pagination
-    renderPagination();
+function handleButtonClick(warning) {
+    const dialog = document.getElementById('tableDialog');
+    dialog.close()
+    molstar.behavior.focus(warning);
 }
 
-// Render pagination
-function renderPagination() {
-    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-    const pagination = $("#pagination");
+function displayData(warnings) {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentData = warnings.slice(startIndex, endIndex);
 
-    let paginationHTML = `
-                <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
-                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1
-        })">Previous</a>
-                </li>
-            `;
+    const tableBody = document.getElementById('tableBody');
+    tableBody.innerHTML = '';
 
+    currentData.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.chain_id}</td>
+            <td>${item.residue_id}</td>
+            <td title='${item.warning}'>${item.warning}</td>
+            <td>
+                <button onclick='handleButtonClick(${JSON.stringify(item)})' class="btn btn-primary">Show</button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+function setupPagination(warnings) {
+    const totalPages = Math.ceil(warnings.length / itemsPerPage);
+    const paginationElement = document.getElementById('pagination');
+    paginationElement.innerHTML = '';
+
+    // Previous button
+    const prevButton = document.createElement('button');
+    prevButton.innerText = 'Previous';
+    prevButton.disabled = currentPage === 1;
+    prevButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            displayData(warnings);
+            setupPagination(warnings);
+        }
+    });
+    paginationElement.appendChild(prevButton);
+
+    // Page numbers
     for (let i = 1; i <= totalPages; i++) {
-        paginationHTML += `
-                    <li class="page-item ${currentPage === i ? "active" : ""}">
-                        <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
-                    </li>
-                `;
+        const button = document.createElement('button');
+        button.innerText = i;
+        button.classList.toggle('active', i === currentPage);
+        button.addEventListener('click', () => {
+            currentPage = i;
+            displayData(warnings);
+            setupPagination(warnings);
+        });
+        paginationElement.appendChild(button);
     }
 
-    paginationHTML += `
-                <li class="page-item ${currentPage === totalPages ? "disabled" : ""
-        }">
-                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1
-        })">Next</a>
-                </li>
-            `;
-
-    pagination.html(paginationHTML);
-}
-
-// Change page
-function changePage(page) {
-    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-    if (page >= 1 && page <= totalPages) {
-        currentPage = page;
-        renderTable();
-    }
+    // Next button
+    const nextButton = document.createElement('button');
+    nextButton.innerText = 'Next';
+    nextButton.disabled = currentPage === totalPages;
+    nextButton.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            displayData(warnings);
+            setupPagination(warnings);
+        }
+    });
+    paginationElement.appendChild(nextButton);
 }
