@@ -1,3 +1,4 @@
+"use strict";
 
 // Constants
 const ITEMS_PER_PAGE = 5;
@@ -6,12 +7,12 @@ let filteredData = [];
 
 // Initialize
 function init_table(warnings) {
+    const sortedWarnings = warnings.sort((a ,b) => a.residue_id - b.residue_id)
     if (warnings.length === 0) {
-        // document.getElementById('modalTrigger').hidden = true;
         $('#modalTrigger').hide()
         return;
     }
-    filteredData = [...warnings]
+    filteredData = [...sortedWarnings]
     renderTable();
     $("#searchInput").on("input", handleSearch);
 
@@ -19,7 +20,7 @@ function init_table(warnings) {
     $("#tableModal").on("hidden.bs.modal", () => {
         currentPage = 1;
         $("#searchInput").val("");
-        filteredData = [...warnings];
+        filteredData = [...sortedWarnings];
         renderTable();
     });
 }
@@ -37,8 +38,8 @@ function handleSearch(e) {
 }
 
 function handleButtonClick(item) {
-    console.log('Row data:', item);
     $('#tableModal').modal('hide');
+    molstar.behavior.focus(item);
 }
 
 function renderTable() {
