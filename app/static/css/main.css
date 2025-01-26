@@ -15,3 +15,92 @@
         height: 750px;
     }
 }
+
+.table-container {
+    margin: 20px;
+    font-family: Arial, sans-serif;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+th, td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+tr:nth-child(even) {
+    background-color: #f8f8f8;
+}
+.pagination {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+}
+.pagination button {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    border-radius: 4px;
+}
+.pagination button:disabled {
+    background: #f4f4f4;
+    cursor: not-allowed;
+}
+.pagination button.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+/* Dialog styles */
+dialog {
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 1000px;
+    width: 90%;
+}
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+.dialog-header {
+    padding: 16px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.dialog-title {
+    margin: 0;
+    font-size: 1.25rem;
+}
+.close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 8px;
+}
+.dialog-content {
+    padding: 20px;
+}
+.view-btn {
+    padding: 6px 12px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.view-btn:hover {
+    background-color: #218838;
+}
