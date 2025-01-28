@@ -198,7 +198,9 @@ export class ContextModel {
       await this.updateColor("default", {
         carbonColor: {
           name: carbonColor,
-          params: {},
+          params: {
+            value: MolstarColor.fromRgb(27, 158, 119)
+          },
         },
       });
     },
