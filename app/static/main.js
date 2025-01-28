@@ -1,14 +1,11 @@
 "use strict";
 
-let molstar;
+let molstar = ContextModel;
 
-function init_results(structure_url, id) {
+function init_results(structure_url, warnings) {
   (async () => {
-    molstar = await MolstarPartialCharges.create("root", {
-      SbNcbrPartialCharges: true,
-      MAQualityAssessment: true
-    });
-    await load(structure_url, id);
+    await ContextModel.init();
+    await load(structure_url, warnings);
   })().then(
     () => {},
     (error) => {
@@ -17,38 +14,11 @@ function init_results(structure_url, id) {
   );
 }
 
-function init_wrong_structure(structure_url, problematicAtoms) {
-  const parsedAtoms = JSON.parse(problematicAtoms);
-  addProblematicAtoms(parsedAtoms);
+async function load(structure_url, warnings) {
+  await molstar.load(structure_url);
 
-  (async () => {
-    molstar = await MolstarPartialCharges.create("root", {
-      SbNcbrPartialCharges: false,
-      MAQualityAssessment: false
-    });
-    await loadWrongStructure(structure_url);
-  })().then(
-    () => {},
-    (error) => {
-      console.error("Mol* initialization ❌", error);
-    }
-  );
-}
-
-async function load(structure_url, id) {
-  const first_example = "P34712_7.2_4";
-
-  await molstar.load(structure_url, "mmcif", "PDBCharges");
-
-  if (id === first_example) {
-    document.getElementById("view_surface").setAttribute("checked", "true");
-    await molstar.type.surface();
-  } else {
-    document
-            .getElementById("colors_relative")
-            .setAttribute("checked", "true");
-    await molstar.type.default();
-  }
+  await molstar.type.default();
+  await molstar.behavior.setWarnings(warnings);
 
   resetRange();
   updateRelativeColor();
@@ -56,20 +26,27 @@ async function load(structure_url, id) {
   mountColorControls();
 }
 
-async function loadWrongStructure(structure_url) {
-  await molstar.load(structure_url, "pdb", "PDBCharges");
-  await molstar.type.ballAndStick();
-  await molstar.color.default();
-}
-
 function mountTypeControls() {
   const cartoon = document.getElementById("view_cartoon");
   const surface = document.getElementById("view_surface");
   const bas = document.getElementById("view_bas");
-  if (!cartoon || !surface || !bas) return;
+  const showWater = document.getElementById("show_water");
+  
+  if (!cartoon || !surface || !bas || !showWater) return;
+  
   cartoon.onclick = async () => await updateDefaultType();
   surface.onclick = async () => await updateSurfaceType();
   bas.onclick = async () => await updateBallAndStickType();
+  showWater.onclick = async (e) => await updateShowWater(e.target.checked);
+
+  showWater.parentElement.style.visibility = molstar.type.hasWater() ? 'visible' : 'hidden'
+
+  // molstar.state.loadingStatus.subscribe((loadingStatus) => {    
+  //   cartoon.disabled = loadingStatus.kind === 'loading'
+  //   surface.disabled = loadingStatus.kind === 'loading'
+  //   bas.disabled = loadingStatus.kind === 'loading'
+  //   showWater.disabled = loadingStatus.kind === 'loading'
+  // })
 }
 
 async function updateDefaultType() {
@@ -84,14 +61,21 @@ async function updateBallAndStickType() {
   await molstar.type.ballAndStick();
 }
 
+async function updateShowWater(hidden) {
+  await molstar.type.setWaterVisibility(hidden);
+}
+
 function mountColorControls() {
-  const structure = document.getElementById("colors_structure");
+  const structureChain = document.getElementById("colors_structure_chain_id");
+  const structureUniform = document.getElementById("colors_structure_uniform");
   const relative = document.getElementById("colors_relative");
   const absolute = document.getElementById("colors_absolute");
   const range = document.getElementById("max_value");
   const reset = document.getElementById("reset_max_charge");
+  
   if (
-        !structure ||
+        !structureChain ||
+        !structureUniform ||
         !relative ||
         !absolute ||
         !range ||
@@ -100,18 +84,29 @@ function mountColorControls() {
     console.error("Color controls not found");
     return;
   }
-  structure.onclick = async () => await updateDefaultColor();
+  
+  structureChain.onclick = async () => await updateDefaultColor('chain-id');
+  structureUniform.onclick = async () => await updateDefaultColor('uniform');
   relative.onclick = async () => await updateRelativeColor();
   absolute.onclick = async () => await updateAbsoluteColor();
   range.oninput = async () => await updateRange();
   reset.onclick = async () => await resetRange();
+
+  // molstar.state.loadingStatus.subscribe((loadingStatus) => {    
+  //   structureChain.disabled = loadingStatus.kind === 'loading'
+  //   structureUniform.disabled = loadingStatus.kind === 'loading'
+  //   relative.disabled = loadingStatus.kind === 'loading'
+  //   absolute.disabled = loadingStatus.kind === 'loading'
+  //   range.disabled = loadingStatus.kind === 'loading'
+  //   reset.disabled = loadingStatus.kind === 'loading'
+  // })
 }
 
-async function updateDefaultColor() {
+async function updateDefaultColor(carbonColor) {
   const input = document.getElementById("max_value");
   if (!input) return;
   input.setAttribute("disabled", "true");
-  await molstar.color.default();
+  await molstar.color.default(carbonColor);
 }
 
 async function resetRange() {
@@ -121,7 +116,7 @@ async function resetRange() {
     return;
   }
   const maxCharge = molstar.charges.getMaxCharge();
-  input.value = maxCharge;
+  input.value = Number(maxCharge.toFixed(2));
   if (!input.hasAttribute("disabled")) {
     await updateRange();
   }

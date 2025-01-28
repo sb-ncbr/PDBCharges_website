@@ -1,0 +1,30 @@
+<div>
+  <!-- Button to open the dialog -->
+  <button class="btn btn-secondary mb-3" onclick="openDialog()">
+    Show Residual Warnings
+  </button>
+
+  <!-- Dialog containing the table -->
+  <dialog id="tableDialog">
+    <div class="dialog-header">
+      <h2 class="dialog-title">Residual Warnings</h2>
+      <button class="close-button" onclick="closeDialog()">&times;</button>
+    </div>
+    <div class="dialog-content">
+      <div class="table-container">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th>Chain ID</th>
+              <th>Residue Id</th>
+              <th>Warning</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  </dialog>
+</div>
