@@ -103,14 +103,10 @@ export function MolstarViewport({ context }: { context: ContextModel }) {
 
 export function MolstarSequence({ context }: { context: ContextModel }) {
   const warnings = useBehavior(context.state.warnings);
-  const residueIds = useMemo(
-    () => new Set(warnings?.map((w) => w.residue_id) ?? []),
-    [warnings]
-  );
 
   return (
     <PluginContextContainer plugin={context.plugin}>
-      <SequenceView warnings={residueIds} />
+      <SequenceView warnings={warnings ?? new Map()} />
     </PluginContextContainer>
   );
 }

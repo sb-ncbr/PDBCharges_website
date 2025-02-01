@@ -44,7 +44,9 @@ export class ContextModel {
     showControls: new BehaviorSubject<boolean>(false),
     isExpanded: new BehaviorSubject<boolean>(false),
 
-    warnings: new BehaviorSubject<ResidualWarning[] | undefined>(undefined),
+    warnings: new BehaviorSubject<Map<string, Set<number>> | undefined>(
+      undefined
+    ),
   };
 
   get plugin(): PluginUIContext {
@@ -199,7 +201,7 @@ export class ContextModel {
         carbonColor: {
           name: carbonColor,
           params: {
-            value: MolstarColor.fromRgb(27, 158, 119)
+            value: MolstarColor.fromRgb(27, 158, 119),
           },
         },
       });
@@ -243,8 +245,26 @@ export class ContextModel {
   };
 
   behavior = {
-    setWarnings: (warnings: ResidualWarning[]) =>
-      this.state.warnings.next(warnings),
+    setWarnings: (warnings: ResidualWarning[]) => {
+      const warningSet = new Map<string, Set<number>>();
+
+      warnings.sort((a, b) => {
+        if (a.chain_id !== b.chain_id) {
+          return a.chain_id.localeCompare(b.chain_id);
+        }
+        return a.residue_id - b.residue_id;
+      });
+
+      for (const warning of warnings) {
+        if (!warningSet.has(warning.chain_id)) {
+          warningSet.set(warning.chain_id, new Set());
+        }
+        const chainIdMap = warningSet.get(warning.chain_id);
+        chainIdMap!.add(warning.residue_id);
+      }
+
+      this.state.warnings.next(warningSet);
+    },
     focus: (warning: ResidualWarning) => {
       const data =
         this.plugin.managers.structure.hierarchy.current.structures[0]
