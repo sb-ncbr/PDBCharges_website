@@ -1,14 +1,17 @@
 # Mol* Viewer for PDBCharges
 
-1. Build the viewer
+## How to run
+
+For development run a build watcher. Dev server won't work with our setup.
+
+```sh
+npm run watch
+```
+
+For production build the viewer.
 
 ```sh
 npm run build
 ```
 
-2. Move files to Flask app
-
-```sh
-mv dist/assets/*.css ../app/static/molstar/molstar.css
-mv dist/assets/*.js ../app/static/molstar/molstar.js
-```
+Both commands create build artifacts which are referenced by a symlink in Flask app. Therefore it's necessary to first build the viewer before running the Flask app.
