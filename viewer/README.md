@@ -14,4 +14,8 @@ For production build the viewer.
 npm run build
 ```
 
-Both commands create build artifacts which are referenced by a symlink in Flask app. Therefore it's necessary to first build the viewer before running the Flask app.
+Move the build artifacts to Flask app.
+
+```sh
+mv dist/molstar.* ../app/static/molstar/
+```
