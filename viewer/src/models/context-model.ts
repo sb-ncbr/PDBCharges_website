@@ -220,6 +220,12 @@ export class ContextModel {
         absolute: false,
       });
     },
+    setChargesSmoothing: async (smoothing: boolean) => {
+      await this.updateColor(this.partialChargesColorProps.name, {
+        absolute: false,
+        smoothing: smoothing,
+      });
+    },
   };
 
   type = {
