@@ -1,1 +1,0 @@
-../../../viewer/dist/molstar.js
