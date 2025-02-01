@@ -1,3 +1,8 @@
+import {
+  StructureElement,
+  StructureProperties,
+  Unit,
+} from "molstar/lib/mol-model/structure";
 import { Sequence } from "molstar/lib/mol-plugin-ui/sequence/sequence";
 import { SequenceWrapper } from "molstar/lib/mol-plugin-ui/sequence/wrapper";
 import { UUID } from "molstar/lib/mol-util";
@@ -6,12 +11,12 @@ type PdbChargesSequenceProps = {
   sequenceWrapper: SequenceWrapper.Any;
   sequenceNumberPeriod?: number;
   hideSequenceNumbers?: boolean;
-  warnings: Set<number>;
+  warnings: Map<string, Set<number>>;
 };
 
 export class PdbChargesSequence extends Sequence<PdbChargesSequenceProps> {
-  colors = {
-    warning: "rgb(255, 0, 0)",
+  private colors = {
+    warning: "rgb(216, 0, 0)",
     highlighted: "rgb(255, 102, 153)",
     selected: "rgb(51, 255, 25)",
   };
@@ -36,8 +41,45 @@ export class PdbChargesSequence extends Sequence<PdbChargesSequenceProps> {
     }
   }
 
-  private getColor(marker: number, seqIdx?: number) {
-    if (seqIdx !== undefined && this.props.warnings.has(seqIdx)) {
+  protected location = StructureElement.Location.create(void 0);
+
+  protected getResidueId(seqIdx: number): number | undefined {
+    const loci = this.props.sequenceWrapper.getLoci(seqIdx);
+    const l = StructureElement.Loci.getFirstLocation(loci, this.location);
+
+    if (!l) return undefined;
+
+    if (Unit.isAtomic(l.unit)) {
+      return StructureProperties.residue.auth_seq_id(l);
+    }
+
+    return undefined;
+  }
+
+  protected getChainId(seqIdx: number): string | undefined {
+    const loci = this.props.sequenceWrapper.getLoci(seqIdx);
+    const l = StructureElement.Loci.getFirstLocation(loci, this.location);
+
+    if (!l) return undefined;
+
+    if (Unit.isAtomic(l.unit)) {
+      return StructureProperties.chain.auth_asym_id(l);
+    }
+
+    return undefined;
+  }
+
+  private getColor(marker: number, seqIdx: number) {
+    const chainId = this.getChainId(seqIdx);
+    const residueId = this.getResidueId(seqIdx);
+
+    console.log(seqIdx, chainId, residueId);
+
+    if (
+      chainId &&
+      residueId &&
+      this.props.warnings.get(chainId)?.has(residueId)
+    ) {
       return this.colors.warning;
     }
     if (marker === 0) {
