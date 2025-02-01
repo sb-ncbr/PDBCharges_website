@@ -73,15 +73,16 @@ export class PdbChargesSequence extends Sequence<PdbChargesSequenceProps> {
     const chainId = this.getChainId(seqIdx);
     const residueId = this.getResidueId(seqIdx);
 
-    if (
-      chainId &&
-      residueId &&
-      this.props.warnings.get(chainId)?.has(residueId)
-    ) {
-      return this.colors.warning;
-    }
     if (marker === 0) {
-      return "";
+      if (
+        chainId &&
+        residueId &&
+        this.props.warnings.get(chainId)?.has(residueId)
+      ) {
+        return this.colors.warning;
+      } else {
+        return "";
+      }
     } else if (marker % 2 === 0) {
       return this.colors.selected;
     } else {
