@@ -23,15 +23,6 @@ $ pyenv exec python -m venv venv
 $ . venv/bin/activate
 $ pip install -r requirements.txt
 ```
-
-Build the project's Mol* Viewer.
-
-```bash
-cd viewer/
-npm install
-npm run build
-```
-
 Run the project by running the following command inside the virtual environment:
 
 ```bash
