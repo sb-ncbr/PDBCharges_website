@@ -51,7 +51,7 @@ export const PartialChargesThemeParams = {
     ],
     { isHidden: false }
   ),
-  smoothing: PD.Boolean(true),
+  smoothing: PD.Boolean(false),
 };
 export type PartialChargesThemeParams = typeof PartialChargesThemeParams;
 
