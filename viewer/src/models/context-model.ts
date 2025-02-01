@@ -222,7 +222,6 @@ export class ContextModel {
     },
     setChargesSmoothing: async (smoothing: boolean) => {
       await this.updateColor(this.partialChargesColorProps.name, {
-        absolute: false,
         smoothing: smoothing,
       });
     },
