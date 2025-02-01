@@ -6,7 +6,7 @@ let currentPage = 1;
 function init_table(warnings) {
     warnings.sort((a, b) => {
         if (a.chainId !== b.chainId) {
-            return a.chainId - b.chainId;
+            return a.chainId.localeCompare(b.chainId);
         }
         return a.residueId - b.residueId;
     });
