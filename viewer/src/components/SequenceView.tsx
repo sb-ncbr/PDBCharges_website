@@ -267,7 +267,7 @@ type SequenceViewState = {
 };
 
 export class SequenceView extends PluginUIComponent<
-  { warnings: Set<number>; defaultMode?: SequenceViewMode },
+  { warnings: Map<string, Set<number>>; defaultMode?: SequenceViewMode },
   SequenceViewState
 > {
   state: SequenceViewState = {
