@@ -6,7 +6,7 @@ import {
 } from "molstar/lib/mol-plugin-ui/plugin";
 import { SequenceView } from "./SequenceView";
 import { useBehavior } from "../hooks/use-behavior";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { ContextModel } from "../models/context-model";
 
 export function ViewerLayout({ context }: { context: ContextModel }) {

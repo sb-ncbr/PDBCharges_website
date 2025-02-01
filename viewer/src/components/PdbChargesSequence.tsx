@@ -73,8 +73,6 @@ export class PdbChargesSequence extends Sequence<PdbChargesSequenceProps> {
     const chainId = this.getChainId(seqIdx);
     const residueId = this.getResidueId(seqIdx);
 
-    console.log(seqIdx, chainId, residueId);
-
     if (
       chainId &&
       residueId &&
