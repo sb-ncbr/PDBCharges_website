@@ -4,17 +4,22 @@ const itemsPerPage = 10;
 let currentPage = 1;
 
 function init_table(warnings) {
-    const sortedWarnings = warnings.sort((a, b) => a.residue_id - b.residue_id)
+    warnings.sort((a, b) => {
+        if (a.chainId !== b.chainId) {
+            return a.chainId - b.chainId;
+        }
+        return a.residueId - b.residueId;
+    });
 
-    if (sortedWarnings.length === 0) {
+    if (warnings.length === 0) {
         const dialog = document.getElementById('tableDialog');
         dialog.parentElement.hidden = true;
         return;
     }
 
     setupDialog();
-    displayData(sortedWarnings);
-    setupPagination(sortedWarnings);
+    displayData(warnings);
+    setupPagination(warnings);
 }
 
 function setupDialog() {
