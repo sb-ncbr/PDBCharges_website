@@ -6,6 +6,7 @@ import { ParamDefinition as PD } from 'molstar/lib/mol-util/param-definition';
 import { Location } from 'molstar/lib/mol-model/location';
 import { SbNcbrPartialChargesPropertyProvider } from './property';
 import { CustomProperty } from 'molstar/lib/mol-model-props/common/custom-property';
+import { smoothCharge } from './utils';
 
 const Colors = {
     Bond: Color(0xffffff),
@@ -45,6 +46,7 @@ export const PartialChargesThemeParams = {
         ],
         { isHidden: false }
     ),
+    smoothing: PD.Boolean(true),
 };
 export type PartialChargesThemeParams = typeof PartialChargesThemeParams;
 
@@ -65,7 +67,7 @@ export function PartialChargesColorTheme(
         throw new Error('No partial charges data found');
     }
 
-    const { absolute, chargeType } = props;
+    const { absolute, chargeType, smoothing } = props;
     const { typeIdToAtomIdToCharge, typeIdToResidueToCharge, maxAbsoluteAtomCharges, maxAbsoluteResidueCharges } = data;
     const typeId = SbNcbrPartialChargesPropertyProvider.props(model).typeId;
     const atomToCharge = typeIdToAtomIdToCharge.get(typeId);
@@ -105,11 +107,15 @@ export function PartialChargesColorTheme(
                 }
             }
 
-            const charge = chargeMap.get(id);
+            let charge = chargeMap.get(id);
 
             if (charge === undefined) {
                 console.warn('No charge found for id', id);
                 return Colors.MissingCharge;
+            }
+
+            if (smoothing) {
+                charge = smoothCharge(charge)
             }
 
             return Colors.getColor(charge, maxCharge);
