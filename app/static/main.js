@@ -70,6 +70,7 @@ function mountColorControls() {
   const structureUniform = document.getElementById("colors_structure_uniform");
   const relative = document.getElementById("colors_relative");
   const absolute = document.getElementById("colors_absolute");
+  const chargesSmoothing = document.getElementById("charges_smoothing");
   const range = document.getElementById("max_value");
   const reset = document.getElementById("reset_max_charge");
   
@@ -78,6 +79,7 @@ function mountColorControls() {
         !structureUniform ||
         !relative ||
         !absolute ||
+        !chargesSmoothing ||
         !range ||
         !reset
     ) {
@@ -89,6 +91,7 @@ function mountColorControls() {
   structureUniform.onclick = async () => await updateDefaultColor('uniform');
   relative.onclick = async () => await updateRelativeColor();
   absolute.onclick = async () => await updateAbsoluteColor();
+  chargesSmoothing.onclick = async (e) => await updateChargesSmoothing(e.target.checked);
   range.oninput = async () => await updateRange();
   reset.onclick = async () => await resetRange();
 
@@ -109,6 +112,10 @@ async function updateDefaultColor(carbonColor) {
   await molstar.color.default(carbonColor);
 }
 
+function roundMaxCharge(charge) {
+  return Number(charge.toFixed(2))
+}
+
 async function resetRange() {
   const input = document.getElementById("max_value");
   if (!input) {
@@ -116,7 +123,7 @@ async function resetRange() {
     return;
   }
   const maxCharge = molstar.charges.getMaxCharge();
-  input.value = Number(maxCharge.toFixed(2));
+  input.value = roundMaxCharge(maxCharge);
   if (!input.hasAttribute("disabled")) {
     await updateRange();
   }
@@ -142,17 +149,25 @@ async function updateAbsoluteColor() {
   await updateRange();
 }
 
+async function updateChargesSmoothing(useSmoothing) {
+  await molstar.color.setChargesSmoothing(useSmoothing);
+}
+
 async function updateRange() {
   const input = document.getElementById("max_value");
   if (!input) {
     console.error("Max value input not found");
     return;
   }
-  const value = Number(input.value);
-  const min = Number(input.min);
+  let value = Number(input.value);
   if (isNaN(value)) return;
-  if (value < min) input.value = min;
-  await molstar.color.absolute(input.value);
+  if (value < 0) {
+    value = 0;
+  } else {
+    value = roundMaxCharge(value);
+  }
+  input.value = value;
+  await molstar.color.absolute(value);
 }
 
 function addProblematicAtoms(problematicAtoms) {

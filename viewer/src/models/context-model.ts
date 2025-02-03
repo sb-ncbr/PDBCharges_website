@@ -1,11 +1,6 @@
 import merge from "lodash.merge";
 import { MAQualityAssessment } from "molstar/lib/extensions/model-archive/quality-assessment/behavior";
 import { PLDDTConfidenceColorThemeProvider } from "molstar/lib/extensions/model-archive/quality-assessment/color/plddt";
-import {
-  SbNcbrPartialCharges,
-  SbNcbrPartialChargesPropertyProvider,
-} from "molstar/lib/extensions/sb-ncbr";
-import { SbNcbrPartialChargesColorThemeProvider } from "molstar/lib/extensions/sb-ncbr/partial-charges/color";
 import { MmcifFormat } from "molstar/lib/mol-model-formats/structure/mmcif";
 import { Model, StructureSelection } from "molstar/lib/mol-model/structure";
 import { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
@@ -15,6 +10,7 @@ import {
   PluginUISpec,
 } from "molstar/lib/mol-plugin-ui/spec";
 import { StructureFocusRepresentation } from "molstar/lib/mol-plugin/behavior/dynamic/selection/structure-focus-representation";
+import { setSubtreeVisibility } from "molstar/lib/mol-plugin/behavior/static/state";
 import { PluginConfig } from "molstar/lib/mol-plugin/config";
 import { PluginSpec } from "molstar/lib/mol-plugin/spec";
 import { BallAndStickRepresentationProvider } from "molstar/lib/mol-repr/structure/representation/ball-and-stick";
@@ -22,6 +18,7 @@ import { GaussianSurfaceRepresentationProvider } from "molstar/lib/mol-repr/stru
 import { Script } from "molstar/lib/mol-script/script";
 import { ElementSymbolColorThemeProvider } from "molstar/lib/mol-theme/color/element-symbol";
 import { PhysicalSizeThemeProvider } from "molstar/lib/mol-theme/size/physical";
+import { Color as MolstarColor } from "molstar/lib/mol-util/color";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
 import {
   AsyncResult,
@@ -31,8 +28,11 @@ import {
   Size,
   Type,
 } from "./types";
-import { Color as MolstarColor } from "molstar/lib/mol-util/color";
-import { setSubtreeVisibility } from "molstar/lib/mol-plugin/behavior/static/state";
+import {
+  SbNcbrPartialCharges,
+  SbNcbrPartialChargesPropertyProvider,
+  SbNcbrPartialChargesColorThemeProvider,
+} from "../charges-extension";
 
 export class ContextModel {
   private _plugin: PluginUIContext;
@@ -44,7 +44,9 @@ export class ContextModel {
     showControls: new BehaviorSubject<boolean>(false),
     isExpanded: new BehaviorSubject<boolean>(false),
 
-    warnings: new BehaviorSubject<ResidualWarning[] | undefined>(undefined),
+    warnings: new BehaviorSubject<Map<string, Set<number>> | undefined>(
+      undefined
+    ),
   };
 
   get plugin(): PluginUIContext {
@@ -199,7 +201,7 @@ export class ContextModel {
         carbonColor: {
           name: carbonColor,
           params: {
-            value: MolstarColor.fromRgb(27, 158, 119)
+            value: MolstarColor.fromRgb(27, 158, 119),
           },
         },
       });
@@ -216,6 +218,11 @@ export class ContextModel {
     relative: async () => {
       await this.updateColor(this.partialChargesColorProps.name, {
         absolute: false,
+      });
+    },
+    setChargesSmoothing: async (smoothing: boolean) => {
+      await this.updateColor(this.partialChargesColorProps.name, {
+        smoothing: smoothing,
       });
     },
   };
@@ -243,8 +250,26 @@ export class ContextModel {
   };
 
   behavior = {
-    setWarnings: (warnings: ResidualWarning[]) =>
-      this.state.warnings.next(warnings),
+    setWarnings: (warnings: ResidualWarning[]) => {
+      const warningSet = new Map<string, Set<number>>();
+
+      warnings.sort((a, b) => {
+        if (a.chain_id !== b.chain_id) {
+          return a.chain_id.localeCompare(b.chain_id);
+        }
+        return a.residue_id - b.residue_id;
+      });
+
+      for (const warning of warnings) {
+        if (!warningSet.has(warning.chain_id)) {
+          warningSet.set(warning.chain_id, new Set());
+        }
+        const chainIdMap = warningSet.get(warning.chain_id);
+        chainIdMap!.add(warning.residue_id);
+      }
+
+      this.state.warnings.next(warningSet);
+    },
     focus: (warning: ResidualWarning) => {
       const data =
         this.plugin.managers.structure.hierarchy.current.structures[0]
