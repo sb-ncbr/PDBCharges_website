@@ -11,6 +11,24 @@
       <button class="close-button" onclick="closeDialog()">&times;</button>
     </div>
     <div class="dialog-content">
+      <!-- Search input -->
+      <div class="search-container mb-3">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search by chain ID, residue ID, or warning..."
+          class="form-control"
+        />
+      </div>
+
+      <!-- Results count -->
+      <div id="resultsCount" class="mb-2"></div>
+
+      <!-- No results message -->
+      <div id="noResultsMessage" style="display: none" class="alert alert-info">
+        No results found. Try a different search term.
+      </div>
+
       <div class="table-container">
         <table id="dataTable">
           <thead>

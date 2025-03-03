@@ -21,6 +21,7 @@
     font-family: Arial, sans-serif;
     overflow-x: auto;
 }
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -28,7 +29,9 @@ table {
     table-layout: fixed;
     min-width: 800px;
 }
-th, td {
+
+th,
+td {
     padding: 6px 12px;
     text-align: left;
     border: 1px solid #ddd;
@@ -36,23 +39,44 @@ th, td {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-th:nth-child(1), td:nth-child(1) { width: 40px; }
-th:nth-child(2), td:nth-child(2) { width: 40px; }
-th:nth-child(3), td:nth-child(3) { width: 300px; }
-th:nth-child(4), td:nth-child(4) { width: 40px; text-align: center; }
+
+th:nth-child(1),
+td:nth-child(1) {
+    width: 40px;
+}
+
+th:nth-child(2),
+td:nth-child(2) {
+    width: 40px;
+}
+
+th:nth-child(3),
+td:nth-child(3) {
+    width: 300px;
+}
+
+th:nth-child(4),
+td:nth-child(4) {
+    width: 40px;
+    text-align: center;
+}
+
 th {
     background-color: #f4f4f4;
     font-weight: bold;
 }
+
 tr:nth-child(even) {
     background-color: #f8f8f8;
 }
+
 .pagination {
     display: flex;
     gap: 8px;
     align-items: center;
     justify-content: center;
 }
+
 .pagination button {
     padding: 8px 12px;
     border: 1px solid #ddd;
@@ -60,15 +84,18 @@ tr:nth-child(even) {
     cursor: pointer;
     border-radius: 4px;
 }
+
 .pagination button:disabled {
     background: #f4f4f4;
     cursor: not-allowed;
 }
+
 .pagination button.active {
     background: #007bff;
     color: white;
     border-color: #007bff;
 }
+
 dialog {
     padding: 0;
     border: none;
@@ -77,9 +104,11 @@ dialog {
     max-width: 1200px;
     width: 90%;
 }
+
 dialog::backdrop {
     background-color: rgba(0, 0, 0, 0.5);
 }
+
 .dialog-header {
     padding: 16px 20px;
     background-color: #f8f9fa;
@@ -88,10 +117,12 @@ dialog::backdrop {
     justify-content: space-between;
     align-items: center;
 }
+
 .dialog-title {
     margin: 0;
     font-size: 1.25rem;
 }
+
 .close-button {
     background: none;
     border: none;
@@ -99,6 +130,44 @@ dialog::backdrop {
     cursor: pointer;
     padding: 0 8px;
 }
+
 .dialog-content {
     padding: 20px;
+}
+
+/* Search container */
+.search-container {
+    margin-bottom: 15px;
+}
+
+/* Search input */
+#searchInput {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Results count */
+#resultsCount {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+/* No results message */
+#noResultsMessage {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+/* Highlight search matches (optional) */
+.highlight {
+    background-color: #fff3cd;
+    padding: 0 2px;
 }
