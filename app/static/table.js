@@ -61,6 +61,7 @@ function setupSearch(warnings) {
             filteredWarnings = warnings.filter(item => 
                 (item.chain_id && item.chain_id.toLowerCase().includes(searchTerm)) ||
                 (item.residue_id && item.residue_id.toString().includes(searchTerm)) ||
+                (item.residue_name && item.residue_name.toLowerCase().includes(searchTerm)) ||
                 (item.warning && item.warning.toLowerCase().includes(searchTerm))
             );
         }
@@ -93,6 +94,7 @@ function displayData(warnings) {
         row.innerHTML = `
             <td>${item.chain_id}</td>
             <td>${item.residue_id}</td>
+            <td>${item.residue_name}</td>
             <td title='${item.warning}'>${item.warning}</td>
             <td>
                 <button onclick='handleButtonClick(${JSON.stringify(item)})' class="btn btn-primary">Show</button>
