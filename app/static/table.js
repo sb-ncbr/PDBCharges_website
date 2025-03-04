@@ -2,6 +2,7 @@
 
 const itemsPerPage = 10;
 let currentPage = 1;
+let filteredWarnings = [];
 
 function init_table(warnings) {
     warnings.sort((a, b) => {
@@ -17,9 +18,11 @@ function init_table(warnings) {
         return;
     }
 
+    filteredWarnings = [...warnings];
     setupDialog();
-    displayData(warnings);
-    setupPagination(warnings);
+    setupSearch(warnings);
+    displayData(filteredWarnings);
+    setupPagination(filteredWarnings);
 }
 
 function setupDialog() {
@@ -43,8 +46,39 @@ function closeDialog() {
 
 function handleButtonClick(warning) {
     const dialog = document.getElementById('tableDialog');
-    dialog.close()
+    dialog.close();
     molstar.behavior.focus(warning);
+}
+
+function setupSearch(warnings) {
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        
+        if (searchTerm === '') {
+            filteredWarnings = [...warnings];
+        } else {
+            filteredWarnings = warnings.filter(item => 
+                (item.chain_id && item.chain_id.toLowerCase().includes(searchTerm)) ||
+                (item.residue_id && item.residue_id.toString().includes(searchTerm)) ||
+                (item.residue_name && item.residue_name.toLowerCase().includes(searchTerm)) ||
+                (item.warning && item.warning.toLowerCase().includes(searchTerm))
+            );
+        }
+        
+        // Reset to first page when search changes
+        currentPage = 1;
+        displayData(filteredWarnings);
+        setupPagination(filteredWarnings);
+        
+        // Show no results message if needed
+        const noResultsMsg = document.getElementById('noResultsMessage');
+        if (filteredWarnings.length === 0) {
+            noResultsMsg.style.display = 'block';
+        } else {
+            noResultsMsg.style.display = 'none';
+        }
+    });
 }
 
 function displayData(warnings) {
@@ -60,6 +94,7 @@ function displayData(warnings) {
         row.innerHTML = `
             <td>${item.chain_id}</td>
             <td>${item.residue_id}</td>
+            <td>${item.residue_name}</td>
             <td title='${item.warning}'>${item.warning}</td>
             <td>
                 <button onclick='handleButtonClick(${JSON.stringify(item)})' class="btn btn-primary">Show</button>
@@ -73,6 +108,15 @@ function setupPagination(warnings) {
     const totalPages = Math.ceil(warnings.length / itemsPerPage);
     const paginationElement = document.getElementById('pagination');
     paginationElement.innerHTML = '';
+
+    // Show total results count
+    const resultsCount = document.getElementById('resultsCount');
+    resultsCount.textContent = `Showing ${warnings.length} results`;
+
+    // If no pages, don't show pagination
+    if (totalPages === 0) {
+        return;
+    }
 
     // Previous button
     const prevButton = document.createElement('button');
