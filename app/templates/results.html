@@ -130,9 +130,10 @@
 <script>
     const structure_url = '{{ url_for("get_structure", code=code) }}';
     const warnings = {{ warnings|tojson|safe }};
+    const modified_warnings = {{ modified_warnings|tojson|safe }};
     
     init_results(structure_url, warnings);
-    init_table(warnings);
+    init_table(modified_warnings);
 </script>
 <script src="{{ url_for('static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
 {% endblock scripts %}
