@@ -1,13 +1,16 @@
 import json
 import os
 import zipfile
-from random import random
 from datetime import datetime
-from openbabel import openbabel
-import requests
+from random import random
 
-from markupsafe import Markup
+import requests
+from collections import defaultdict
 from flask import render_template, flash, request, send_from_directory, redirect, url_for, Response, Flask, jsonify
+from gemmi import cif
+from markupsafe import Markup
+from openbabel import openbabel
+
 
 application = Flask(__name__)
 application.jinja_env.trim_blocks = True
@@ -28,6 +31,47 @@ def download_data(code):
         if response.status_code == 200:
             with open(f'{data_dir}/{file}', 'w') as pdb_file:
                 pdb_file.write(response.text)
+
+    # modify residual warnings because of Mol*
+    residual_warnings_file = f'{root_dir}/calculated_structures/{code}/residual_warnings.json'
+    cif_file = f'{root_dir}/calculated_structures/{code}/{code}.cif'
+    residual_warnings_exist = os.path.exists(residual_warnings_file)
+    cif_file_exist = os.path.exists(cif_file)
+    if residual_warnings_exist and cif_file_exist:
+
+        doc = cif.read_file(cif_file)
+        block = doc.sole_block()
+        cif_data = set(zip(block.find_loop("_atom_site.label_comp_id"),
+                           block.find_loop("_atom_site.auth_seq_id"),
+                           block.find_loop("_atom_site.label_seq_id"),
+                           block.find_loop("_atom_site.auth_asym_id"),
+                           block.find_loop("_atom_site.label_asym_id")))
+
+        residues = defaultdict(list)
+        for residue in cif_data:
+            residues[residue[0]].append({"resnums": residue[1:3], "chains": residue[3:5]})
+
+        # load warning json file
+        with open(residual_warnings_file) as warnings_file:
+            warnings = json.load(warnings_file)
+
+        modified_warnings = []
+        for warning in warnings:
+            matching_residues = []
+            for residue in residues[warning["residue_name"]]:
+                if str(warning["residue_id"]) in residue["resnums"] and str(warning["chain_id"]) in residue["chains"]:
+                    matching_residues.append(residue)
+            if len(matching_residues) == 1:
+                modified_warnings.append({"auth_seq_id": matching_residues[0]["resnums"][0],
+                                          "label_seq_id": matching_residues[0]["resnums"][1],
+                                          "auth_asym_id": matching_residues[0]["chains"][0],
+                                          "label_asym_id": matching_residues[0]["chains"][1],
+                                          "residue_name": warning["residue_name"], "warning": warning["warning"]})
+
+        with open(f'{root_dir}/calculated_structures/{code}/modified_residual_warnings.json', 'w') as modified_warning_file:
+            modified_warning_file.write(json.dumps(modified_warnings, indent=4))
+
+
 
 @application.route('/', methods=['GET', 'POST'])
 def main_site():
@@ -136,7 +180,7 @@ def download_files():
     try:
         with zipfile.ZipFile(f'{data_dir}/{code}_charges.zip', 'w') as zip:
             zip.write(f'{data_dir}/{code}.cif', arcname=f'{code}.cif')
-            zip.write(f'{data_dir}/residual_warnings.json', arcname=f'residual_warnings.json')
+            zip.write(f'{data_dir}/modified_residual_warnings.json', arcname=f'residual_warnings.json')
             zip.write(f'{data_dir}/{code}_charges.txt', arcname=f'{code}_charges.txt')
             zip.write(f'{data_dir}/{code}.pqr', arcname=f'{code}.pqr')
         return send_from_directory(data_dir, f'{code}_charges.zip', as_attachment=True)
