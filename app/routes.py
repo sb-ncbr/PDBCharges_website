@@ -126,12 +126,15 @@ def results():
     
     with open(f"{data_dir}/residual_warnings.json", "r", encoding="utf-8") as warnings_file:
         warnings = json.load(warnings_file)
+    with open(f"{data_dir}/modified_residual_warnings.json", "r", encoding="utf-8") as warnings_file:
+        modified_warnings = json.load(warnings_file)
     
     return render_template('results.html',
                            code=code,
                            n_ats=n_ats,
                            total_charge=total_charge,
                            warnings=warnings,
+                           modified_warnings=modified_warnings,
                            num_of_non_charge_atoms=n_ats-len(charges_except_none))
 
 @application.route('/download_files')
