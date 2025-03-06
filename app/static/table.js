@@ -6,10 +6,10 @@ let filteredWarnings = [];
 
 function init_table(warnings) {
     warnings.sort((a, b) => {
-        if (a.chainId !== b.chainId) {
-            return a.chainId.localeCompare(b.chainId);
+        if (a.label_asym_id !== b.label_asym_id) {
+            return a.label_asym_id.localeCompare(b.label_asym_id);
         }
-        return a.residueId - b.residueId;
+        return a.auth_seq_id - b.auth_seq_id;
     });
 
     if (warnings.length === 0) {
@@ -47,7 +47,12 @@ function closeDialog() {
 function handleButtonClick(warning) {
     const dialog = document.getElementById('tableDialog');
     dialog.close();
-    molstar.behavior.focus(warning);
+    molstar.behavior.focus({
+        chain_id: warning.auth_asym_id,
+        residue_id: +warning.auth_seq_id,
+        residue_name: warning.residue_name,
+        warning: warning.warning
+    });
 }
 
 function setupSearch(warnings) {
@@ -59,8 +64,9 @@ function setupSearch(warnings) {
             filteredWarnings = [...warnings];
         } else {
             filteredWarnings = warnings.filter(item => 
-                (item.chain_id && item.chain_id.toLowerCase().includes(searchTerm)) ||
-                (item.residue_id && item.residue_id.toString().includes(searchTerm)) ||
+                (item.label_asym_id && item.label_asym_id.toLowerCase().includes(searchTerm)) ||
+                (item.auth_asym_id && item.auth_asym_id.toLowerCase().includes(searchTerm)) ||
+                (item.auth_seq_id && item.auth_seq_id.toString().includes(searchTerm)) ||
                 (item.residue_name && item.residue_name.toLowerCase().includes(searchTerm)) ||
                 (item.warning && item.warning.toLowerCase().includes(searchTerm))
             );
@@ -92,8 +98,8 @@ function displayData(warnings) {
     currentData.forEach(item => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${item.chain_id}</td>
-            <td>${item.residue_id}</td>
+            <td>${item.label_asym_id} <small>[auth ${item.auth_asym_id}]</small></td>
+            <td>${item.auth_seq_id}</td>
             <td>${item.residue_name}</td>
             <td title='${item.warning}'>${item.warning}</td>
             <td>
