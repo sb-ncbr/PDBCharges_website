@@ -323,7 +323,6 @@ export class ContextModel {
       }
 
       this.plugin.managers.interactivity.lociHighlights.highlightOnly({ loci });
-      this.plugin.managers.interactivity.lociSelects.selectOnly({ loci });
       this.plugin.managers.camera.focusLoci(loci);
       this.plugin.managers.structure.focus.setFromLoci(loci);
     },
