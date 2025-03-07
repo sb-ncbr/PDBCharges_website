@@ -2,7 +2,11 @@ import merge from "lodash.merge";
 import { MAQualityAssessment } from "molstar/lib/extensions/model-archive/quality-assessment/behavior";
 import { PLDDTConfidenceColorThemeProvider } from "molstar/lib/extensions/model-archive/quality-assessment/color/plddt";
 import { MmcifFormat } from "molstar/lib/mol-model-formats/structure/mmcif";
-import { Model, StructureSelection } from "molstar/lib/mol-model/structure";
+import {
+  Model,
+  QueryContext,
+  StructureSelection,
+} from "molstar/lib/mol-model/structure";
 import { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
 import "molstar/lib/mol-plugin-ui/skin/light.scss";
 import {
@@ -11,15 +15,22 @@ import {
 } from "molstar/lib/mol-plugin-ui/spec";
 import { StructureFocusRepresentation } from "molstar/lib/mol-plugin/behavior/dynamic/selection/structure-focus-representation";
 import { setSubtreeVisibility } from "molstar/lib/mol-plugin/behavior/static/state";
+import { PluginCommands } from "molstar/lib/mol-plugin/commands";
 import { PluginConfig } from "molstar/lib/mol-plugin/config";
 import { PluginSpec } from "molstar/lib/mol-plugin/spec";
 import { BallAndStickRepresentationProvider } from "molstar/lib/mol-repr/structure/representation/ball-and-stick";
 import { GaussianSurfaceRepresentationProvider } from "molstar/lib/mol-repr/structure/representation/gaussian-surface";
-import { Script } from "molstar/lib/mol-script/script";
+import { MolScriptBuilder as MS } from "molstar/lib/mol-script/language/builder";
+import { compile } from "molstar/lib/mol-script/runtime/query/base";
 import { ElementSymbolColorThemeProvider } from "molstar/lib/mol-theme/color/element-symbol";
 import { PhysicalSizeThemeProvider } from "molstar/lib/mol-theme/size/physical";
 import { Color as MolstarColor } from "molstar/lib/mol-util/color";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import {
+  SbNcbrPartialCharges,
+  SbNcbrPartialChargesColorThemeProvider,
+  SbNcbrPartialChargesPropertyProvider,
+} from "../charges-extension";
 import {
   AsyncResult,
   Color,
@@ -28,11 +39,6 @@ import {
   Size,
   Type,
 } from "./types";
-import {
-  SbNcbrPartialCharges,
-  SbNcbrPartialChargesPropertyProvider,
-  SbNcbrPartialChargesColorThemeProvider,
-} from "../charges-extension";
 
 export class ContextModel {
   private _plugin: PluginUIContext;
@@ -276,26 +282,46 @@ export class ContextModel {
           .components[0].cell.obj?.data;
       if (!data) return;
 
-      const selection = Script.getStructureSelection(
-        (Q) =>
-          Q.struct.generator.atomGroups({
-            "atom-test": Q.core.logic.or([
-              Q.core.logic.and([
-                Q.core.rel.eq([
-                  Q.struct.atomProperty.macromolecular.auth_asym_id(),
-                  warning.chain_id,
-                ]),
-                Q.core.rel.eq([
-                  Q.struct.atomProperty.macromolecular.auth_seq_id(),
-                  warning.residue_id,
-                ]),
-              ]),
-            ]),
-          }),
-        data
-      );
+      const structure = this.getStructure();
+      if (!structure) {
+        PluginCommands.Toast.Show(this.plugin, {
+          title: "Error",
+          message: "Missing structure.",
+          timeoutMs: 2000,
+        });
+        return;
+      }
 
-      const loci = StructureSelection.toLociWithSourceUnits(selection);
+      const expression = MS.struct.generator.atomGroups({
+        "atom-test": MS.core.logic.and([
+          MS.core.rel.eq([
+            MS.struct.atomProperty.macromolecular.auth_asym_id(),
+            warning.chain_id,
+          ]),
+          MS.core.rel.eq([
+            MS.struct.atomProperty.macromolecular.auth_comp_id(),
+            warning.residue_name,
+          ]),
+          MS.core.rel.eq([
+            MS.struct.atomProperty.macromolecular.auth_seq_id(),
+            warning.residue_id,
+          ]),
+        ]),
+      });
+
+      const query = compile<StructureSelection>(expression);
+      const structureSelection = query(new QueryContext(structure));
+      const loci = StructureSelection.toLociWithSourceUnits(structureSelection);
+
+      if (loci.elements.length === 0) {
+        PluginCommands.Toast.Show(this.plugin, {
+          title: "Error",
+          message: "Couldn't focus residue.",
+          timeoutMs: 2000,
+        });
+        return;
+      }
+
       this.plugin.managers.interactivity.lociHighlights.highlightOnly({ loci });
       this.plugin.managers.interactivity.lociSelects.selectOnly({ loci });
       this.plugin.managers.camera.focusLoci(loci);
@@ -547,6 +573,11 @@ export class ContextModel {
   private getModel() {
     return this.plugin.managers.structure.hierarchy.current.structures[0].model
       ?.cell?.obj?.data;
+  }
+
+  private getStructure() {
+    return this.plugin.managers.structure.hierarchy.current.structures[0]?.cell
+      .obj?.data;
   }
 
   private isTypeIdValid(model: Model, typeId: number) {
