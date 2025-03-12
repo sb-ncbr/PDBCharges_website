@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import { ContextModel } from "./models/context-model.ts";
 import "./index.css";
 import { MolstarViewer } from "./components/MolstarViewer.tsx";
+import { TestArea } from "./TestArea.tsx";
 
 declare global {
   interface Window {
@@ -9,9 +10,19 @@ declare global {
   }
 }
 
-const context = new ContextModel();
-window.ContextModel = context;
+if (import.meta.env.PROD) {
+  const context = new ContextModel();
+  window.ContextModel = context;
 
-createRoot(document.getElementById("root")!).render(
-  <MolstarViewer context={context} />
-);
+  createRoot(document.getElementById("root")!).render(
+    <MolstarViewer context={context} />
+  );
+}
+
+if (import.meta.env.DEV) {
+  const context = new ContextModel();
+
+  createRoot(document.getElementById("root")!).render(
+    <TestArea context={context} />
+  );
+}
