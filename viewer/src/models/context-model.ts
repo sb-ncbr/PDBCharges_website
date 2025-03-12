@@ -25,7 +25,14 @@ import { compile } from "molstar/lib/mol-script/runtime/query/base";
 import { ElementSymbolColorThemeProvider } from "molstar/lib/mol-theme/color/element-symbol";
 import { PhysicalSizeThemeProvider } from "molstar/lib/mol-theme/size/physical";
 import { Color as MolstarColor } from "molstar/lib/mol-util/color";
-import { BehaviorSubject, combineLatest, Observable, Subscription } from "rxjs";
+import {
+  BehaviorSubject,
+  combineLatest,
+  debounceTime,
+  distinctUntilChanged,
+  Observable,
+  Subscription
+} from "rxjs";
 import {
   SbNcbrPartialCharges,
   SbNcbrPartialChargesColorThemeProvider,
@@ -129,9 +136,9 @@ export class ContextModel {
   subAfterLoad() {
     this._subscribe(
       combineLatest([
-        this.state.coloring,
-        this.state.range,
-        this.state.useSmoothing,
+        this.state.coloring.pipe(distinctUntilChanged()),
+        this.state.range.pipe(debounceTime(300), distinctUntilChanged()),
+        this.state.useSmoothing.pipe(distinctUntilChanged()),
       ]),
       async ([coloring, range, useSmoothing]) => {
         if (!coloring) return;
@@ -175,27 +182,36 @@ export class ContextModel {
       }
     );
 
-    this._subscribe(this.state.type, async (type) => {
-      if (!type) return;
+    this._subscribe(
+      this.state.type.pipe(distinctUntilChanged()),
+      async (type) => {
+        if (!type) return;
 
-      if (type === "view_cartoon") {
-        await this.updateType("default");
+        if (type === "view_cartoon") {
+          await this.updateType("default");
+        }
+        if (type === "view_surface") {
+          await this.updateType(this.surfaceTypeProps.type.name);
+        }
+        if (type === "view_bas") {
+          await this.updateType(this.ballAndStickTypeProps.type.name);
+        }
       }
-      if (type === "view_surface") {
-        await this.updateType(this.surfaceTypeProps.type.name);
-      }
-      if (type === "view_bas") {
-        await this.updateType(this.ballAndStickTypeProps.type.name);
-      }
-    });
+    );
 
-    this._subscribe(this.state.showWater, (visible) => {
-      this.showWater(visible);
-    });
+    this._subscribe(
+      this.state.showWater.pipe(distinctUntilChanged()),
+      (visible) => {
+        this.showWater(visible);
+      }
+    );
 
-    this._subscribe(this.state.showMembrane, async (visible) => {
-      await this.showMembraneOrientation(visible);
-    });
+    this._subscribe(
+      this.state.showMembrane.pipe(distinctUntilChanged()),
+      async (visible) => {
+        await this.showMembraneOrientation(visible);
+      }
+    );
   }
 
   unsub() {
