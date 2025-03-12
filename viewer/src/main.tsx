@@ -1,8 +1,8 @@
 import { createRoot } from "react-dom/client";
 import { ContextModel } from "./models/context-model.ts";
-import "./index.css";
 import { MolstarViewer } from "./components/MolstarViewer.tsx";
 import { TestArea } from "./TestArea.tsx";
+import "./index.css";
 
 declare global {
   interface Window {
