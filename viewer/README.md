@@ -40,3 +40,5 @@ npm run dev
 ```
 
 2. Edit the function `smoothCharge` in file [utils.ts](./src/charges-extension/utils.ts)
+
+3. If you want you can move some other mmCIF files with charges into the [./data](./data/) directory and then update the URL in file [TestArea.tsx](./src/TestArea.tsx) to point to the mmCIF file you want to load (ie. `http://localhost:3000/data/{mmcif-filename}`)
