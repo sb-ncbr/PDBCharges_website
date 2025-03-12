@@ -26,7 +26,7 @@ import { ElementSymbolColorThemeProvider } from "molstar/lib/mol-theme/color/ele
 import { PhysicalSizeThemeProvider } from "molstar/lib/mol-theme/size/physical";
 import { Color as MolstarColor } from "molstar/lib/mol-util/color";
 import { MembraneOrientation3D } from "molstar/lib/extensions/anvil/behavior";
-import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import { BehaviorSubject, combineLatest, Observable, Subscription } from "rxjs";
 import {
   SbNcbrPartialCharges,
   SbNcbrPartialChargesColorThemeProvider,
@@ -42,6 +42,13 @@ import {
   Type,
 } from "./types";
 
+type ColorId =
+  | "colors_structure_chain_id"
+  | "colors_structure_uniform"
+  | "colors_relative"
+  | "colors_absolute";
+type ViewId = "view_cartoon" | "view_surface" | "view_bas";
+
 export class ContextModel {
   private _plugin: PluginUIContext;
   private _subscriptions: Subscription[] = [];
@@ -55,6 +62,14 @@ export class ContextModel {
     warnings: new BehaviorSubject<Map<string, Set<number>> | undefined>(
       undefined
     ),
+
+    coloring: new BehaviorSubject<ColorId>("colors_relative"),
+    type: new BehaviorSubject<ViewId>("view_cartoon"),
+    range: new BehaviorSubject<number>(0),
+    showWater: new BehaviorSubject<boolean>(true),
+    hasWater: new BehaviorSubject<boolean>(true),
+    showMembrane: new BehaviorSubject<boolean>(true),
+    useSmoothing: new BehaviorSubject<boolean>(false),
   };
 
   get plugin(): PluginUIContext {
@@ -112,6 +127,78 @@ export class ContextModel {
     });
   }
 
+  subAfterLoad() {
+    this._subscribe(
+      combineLatest([
+        this.state.coloring,
+        this.state.range,
+        this.state.useSmoothing,
+      ]),
+      async ([coloring, range, useSmoothing]) => {
+        if (!coloring) return;
+
+        if (!range) range = 0;
+
+        if (coloring === "colors_structure_chain_id") {
+          await this.updateColor("default", {
+            carbonColor: {
+              name: "chain-id",
+              params: {
+                value: MolstarColor.fromRgb(27, 158, 119),
+              },
+            },
+          });
+        }
+        if (coloring === "colors_structure_uniform") {
+          await this.updateColor("default", {
+            carbonColor: {
+              name: "uniform",
+              params: {
+                value: MolstarColor.fromRgb(27, 158, 119),
+              },
+            },
+          });
+        }
+        if (coloring === "colors_absolute") {
+          await this.updateColor(this.partialChargesColorProps.name, {
+            maxAbsoluteCharge: range,
+            smoothing: useSmoothing,
+            absolute: true,
+          });
+        }
+        if (coloring === "colors_relative") {
+          await this.updateColor(this.partialChargesColorProps.name, {
+            maxAbsoluteCharge: range,
+            smoothing: useSmoothing,
+            absolute: false,
+          });
+        }
+      }
+    );
+
+    this._subscribe(this.state.type, async (type) => {
+      if (!type) return;
+
+      if (type === "view_cartoon") {
+        await this.updateType("default");
+      }
+      if (type === "view_surface") {
+        await this.updateType(this.surfaceTypeProps.type.name);
+      }
+      if (type === "view_bas") {
+        await this.updateType(this.ballAndStickTypeProps.type.name);
+      }
+    });
+
+    this._subscribe(this.state.showWater, (visible) => {
+      this.showWater(visible);
+    });
+
+    this._subscribe(this.state.showMembrane, async (visible) => {
+      await this.showMembraneOrientation(visible);
+    });
+  }
+
   unsub() {
     for (const sub of this._subscriptions) {
       sub.unsubscribe();
@@ -148,16 +235,6 @@ export class ContextModel {
     await this.plugin.builders.structure.hierarchy.applyPreset(
       trajectory,
       "default"
-      // {
-      //   showUnitcell: false,
-      //   representationPreset: "auto",
-      //   representationPresetParams: {
-      //     theme: {
-      //       globalName: this.elementSymbolColorProps.name,
-      //       carbonColor: "chain-id",
-      //     },
-      //   },
-      // }
     );
 
     await this.setInitialRepresentationState();
@@ -165,36 +242,11 @@ export class ContextModel {
     this.sanityCheck();
 
     this.state.loadingStatus.next({ kind: "idle" });
+    this.color.resetRange();
+    this.state.hasWater.next(this.hasWater());
   }
 
   charges = {
-    getMethodNames: () => {
-      const model = this.getModel();
-      if (!model) throw new Error("No model found");
-      const data = SbNcbrPartialChargesPropertyProvider.get(model).value;
-      if (!data) throw new Error("No data found");
-      const methodNames = [];
-      for (let typeId = 1; typeId < data.typeIdToMethod.size + 1; ++typeId) {
-        if (!data.typeIdToMethod.has(typeId))
-          throw new Error(`Missing method for typeId ${typeId}`);
-        methodNames.push(data.typeIdToMethod.get(typeId));
-      }
-      return methodNames;
-    },
-    getTypeId: () => {
-      const model = this.getModel();
-      if (!model) throw new Error("No model loaded.");
-      const typeId = SbNcbrPartialChargesPropertyProvider.props(model).typeId;
-      if (!typeId) throw new Error("No type id found.");
-      return typeId;
-    },
-    setTypeId: (typeId: number) => {
-      const model = this.getModel();
-      if (!model) throw new Error("No model loaded.");
-      if (!this.isTypeIdValid(model, typeId))
-        throw new Error(`Invalid type id ${typeId}`);
-      SbNcbrPartialChargesPropertyProvider.set(model, { typeId });
-    },
     getMaxCharge: () => {
       const model = this.getModel();
       if (!model) throw new Error("No model loaded.");
@@ -208,80 +260,50 @@ export class ContextModel {
   };
 
   color = {
-    default: async (carbonColor: "chain-id" | "uniform") => {
-      await this.updateColor("default", {
-        carbonColor: {
-          name: carbonColor,
-          params: {
-            value: MolstarColor.fromRgb(27, 158, 119),
-          },
-        },
-      });
+    default: (carbonColor: "chain-id" | "uniform") => {
+      if (carbonColor === "chain-id") {
+        this.state.coloring.next("colors_structure_chain_id");
+      } else {
+        this.state.coloring.next("colors_structure_uniform");
+      }
     },
-    alphaFold: async () => {
-      await this.updateColor(PLDDTConfidenceColorThemeProvider.name);
+    absolute: () => {
+      this.state.coloring.next("colors_absolute");
     },
-    absolute: async (max: number) => {
-      await this.updateColor(this.partialChargesColorProps.name, {
-        maxAbsoluteCharge: max,
-        absolute: true,
-      });
+    relative: () => {
+      this.state.coloring.next("colors_relative");
     },
-    relative: async () => {
-      await this.updateColor(this.partialChargesColorProps.name, {
-        absolute: false,
-      });
+    resetRange: () => {
+      const range = this.charges.getMaxCharge();
+      this.state.range.next(range);
     },
-    setChargesSmoothing: async (smoothing: boolean) => {
-      await this.updateColor(this.partialChargesColorProps.name, {
-        smoothing: smoothing,
-      });
+    setRange: (max: number | undefined) => {
+      if (!max) {
+        this.state.range.next(0);
+      } else {
+        this.state.range.next(max);
+      }
+    },
+    setChargesSmoothing: (useSmoothing: boolean) => {
+      this.state.useSmoothing.next(useSmoothing);
     },
   };
 
   type = {
-    isDefaultApplicable: () => {
-      const other = ["cartoon", "carbohydrate"];
-      return Array.from(this.defaultProps.values()).some(({ type }) =>
-        other.includes(type.name)
-      );
+    default: () => {
+      this.state.type.next("view_cartoon");
     },
-    hasWater: () => this.hasWater(),
-    default: async () => {
-      await this.updateType("default");
+    ballAndStick: () => {
+      this.state.type.next("view_bas");
     },
-    ballAndStick: async () => {
-      await this.updateType(this.ballAndStickTypeProps.type.name);
-    },
-    surface: async () => {
-      await this.updateType(this.surfaceTypeProps.type.name);
+    surface: () => {
+      this.state.type.next("view_surface");
     },
     setWaterVisibility: (visible: boolean) => {
-      this.hideWater(visible);
+      this.state.showWater.next(visible);
     },
-    showMembraneOrientation: async (visible: boolean) => {
-      let cell = this.plugin.state.data.selectQ((q) =>
-        q.root.withTag("membrane-orientation-3d")
-      )[0];
-      console.log(cell);
-      if (!cell) {
-        const result = await this.loadMembraneOrientation(visible);
-        if (!result) {
-          PluginCommands.Toast.Show(this.plugin, {
-            title: "Error",
-            message: "Failed to create membrane orientation.",
-            timeoutMs: 2000,
-          });
-          return;
-        }
-        cell = result;
-      }
-
-      setSubtreeVisibility(
-        this.plugin.state.data,
-        cell.transform.ref,
-        !visible
-      );
+    showMembraneVisibility: (visible: boolean) => {
+      this.state.showMembrane.next(visible);
     },
   };
 
@@ -560,9 +582,6 @@ export class ContextModel {
   }
 
   private sanityCheck() {
-    // if (!this.plugin) throw new Error('No plugin found.');
-    // if (!this.plugin.managers.structure.hierarchy.current.structures.length)
-    //     throw new Error('No structure loaded.');
     const model = this.getModel();
     if (!model) throw new Error("No model loaded.");
     const sourceData = model.sourceData as MmcifFormat;
@@ -609,16 +628,27 @@ export class ContextModel {
       .obj?.data;
   }
 
-  private isTypeIdValid(model: Model, typeId: number) {
-    const sourceData = model.sourceData as MmcifFormat;
-    const typeIds =
-      sourceData.data.frame.categories.sb_ncbr_partial_atomic_charges_meta
-        .getField("id")
-        ?.toIntArray();
-    return typeIds?.includes(typeId);
+  async showMembraneOrientation(visible: boolean) {
+    let cell = this.plugin.state.data.selectQ((q) =>
+      q.root.withTag("membrane-orientation-3d")
+    )[0];
+    if (!cell) {
+      const result = await this.loadMembraneOrientation(visible);
+      if (!result) {
+        PluginCommands.Toast.Show(this.plugin, {
+          title: "Error",
+          message: "Failed to create membrane orientation.",
+          timeoutMs: 2000,
+        });
+        return;
+      }
+      cell = result;
+    }
+
+    setSubtreeVisibility(this.plugin.state.data, cell.transform.ref, !visible);
   }
 
-  hideWater(visible: boolean) {
+  showWater(visible: boolean) {
     for (const structure of this.plugin.managers.structure.hierarchy.current
       .structures) {
       for (const component of structure.components) {
