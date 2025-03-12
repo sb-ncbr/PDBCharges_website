@@ -120,7 +120,6 @@ export function PartialChargesColorTheme(
       let charge = chargeMap.get(id);
 
       if (charge === undefined) {
-        console.warn("No charge found for id", id);
         return Colors.MissingCharge;
       }
 
