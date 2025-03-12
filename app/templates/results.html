@@ -42,8 +42,7 @@
                 <legend class="font-weight-bold col-form-label col pb-0 pt-0">View</legend>
                 <div class="col">
                     <div class="form-check form-check-inline col" title="Cartoon representation">
-                        <input class="form-check-input" type="radio" name="view" id="view_cartoon" value="Cartoon"
-                            checked>
+                        <input class="form-check-input" type="radio" name="view" id="view_cartoon" value="Cartoon">
                         <label class="form-check-label" for="view_cartoon">Cartoon with residue charges</label>
                     </div>
                     <div class="form-check form-check-inline col" title="Surface representation">
@@ -54,13 +53,13 @@
                         <input class="form-check-input" type="radio" name="view" id="view_bas" value="Ball & Stick">
                         <label class="form-check-label" for="view_bas">Ball & Stick with atom charges</label>
                     </div>
-                    <div class="form-check form-check-inline col mt-2" title="Ball & Stick representation" style="visibility: hidden">
-                        <input class="form-check-input" type="checkbox" name="view" id="show_water" checked>
-                        <label class="form-check-label" for="show_water">Show water</label>
-                    </div>
-                    <div class="form-check form-check-inline col" title="Ball & Stick representation" style="visibility: hidden">
-                        <input class="form-check-input" type="checkbox" name="view" id="show_membrane_orientation" checked>
+                    <div class="form-check form-check-inline col mt-2" title="Ball & Stick representation">
+                        <input class="form-check-input" type="checkbox" name="view" id="show_membrane_orientation">
                         <label class="form-check-label" for="show_membrane_orientation">Show membrane orientation</label>
+                    </div>
+                    <div class="form-check form-check-inline col" title="Ball & Stick representation">
+                        <input class="form-check-input" type="checkbox" name="view" id="show_water">
+                        <label class="form-check-label" for="show_water">Show water</label>
                     </div>
                 </div>
             </fieldset>
@@ -81,8 +80,7 @@
                     </div>
                     <div class="form-check form-check-inline col-auto"
                         title="Use coloring based on the largest absolute charge value">
-                        <input class="form-check-input" type="radio" name="colors" id="colors_relative" value="Relative"
-                            checked>
+                        <input class="form-check-input" type="radio" name="colors" id="colors_relative" value="Relative">
                         <label class="form-check-label" for="colors_relative">Charges (relative)</label>
                     </div>
                     <div class="form-check form-check-inline col-auto"
@@ -97,8 +95,7 @@
                     </div>
                     <div class="form-group form-inline mb-0">
                         <label class="col-auto col-form-label pl-0 pr-3" for="max_value">Max value:</label>
-                        <input class="col-3 form-control" type="number" id="max_value" name="max_value" min="0" max="5"
-                            step="0.1" value="0" disabled>
+                        <input class="col-3 form-control" type="number" id="max_value" name="max_value" min="0" max="5" step="0.1" value="0">
                         <a class="btn btn-secondary text-sm text-white" id="reset_max_charge">Reset</a>
                     </div>
                 </div>
