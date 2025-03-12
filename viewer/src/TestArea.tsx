@@ -15,7 +15,13 @@ export function TestArea({ context }: { context: ContextModel }) {
   }, [context]);
 
   return (
-    <div style={{ width: "100vw", height: "100vh", padding: "50px" }}>
+    <div
+      style={{
+        width: "1000px",
+        height: "800px",
+        padding: "50px",
+      }}
+    >
       {/* <div style={{ display: "flex", flexDirection: "column" }}> */}
       <MolstarViewer context={context} />
       {/* </div> */}
