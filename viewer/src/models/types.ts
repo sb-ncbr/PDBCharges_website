@@ -27,7 +27,7 @@ export type Size = {
 
 export type AsyncResult<E = string> =
   | { kind: "idle" }
-  | { kind: "loading" }
+  | { kind: "loading"; what?: "structure" | "coloring" | "view" }
   | { kind: "error"; error: E };
 
 export type ResidualWarning = {

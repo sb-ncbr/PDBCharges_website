@@ -62,6 +62,14 @@ function mountTypeControls() {
   molstar.state.hasWater.subscribe((hasWater) => {
     showWater.parentElement.style.visibility = hasWater ? 'visible' : 'hidden'
   })
+  // molstar.state.loadingStatus.subscribe((loadingStatus) => {
+  //   const disabled = loadingStatus.kind === 'loading'
+  //   cartoon.disabled = disabled
+  //   surface.disabled = disabled
+  //   bas.disabled = disabled
+  //   showWater.disabled = disabled
+  //   showMembrane.disabled = disabled
+  // })
 }
 
 function mountColorControls() {
@@ -118,4 +126,14 @@ function mountColorControls() {
   molstar.state.range.subscribe((range) => {
     maxRange.value = Math.round(range * 100) / 100;
   })
+  // molstar.state.loadingStatus.subscribe((loadingStatus) => {
+  //   const disabled = loadingStatus.kind === 'loading'
+  //   structureChain.disabled = disabled
+  //   structureUniform.disabled = disabled
+  //   relative.disabled = disabled
+  //   absolute.disabled = disabled
+  //   chargesSmoothing.disabled = disabled
+  //   maxRange.disabled = disabled
+  //   reset.disabled = disabled
+  // })
 }

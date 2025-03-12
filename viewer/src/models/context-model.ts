@@ -1,9 +1,9 @@
 import merge from "lodash.merge";
+import { MembraneOrientation3D } from "molstar/lib/extensions/anvil/behavior";
 import { MAQualityAssessment } from "molstar/lib/extensions/model-archive/quality-assessment/behavior";
 import { PLDDTConfidenceColorThemeProvider } from "molstar/lib/extensions/model-archive/quality-assessment/color/plddt";
 import { MmcifFormat } from "molstar/lib/mol-model-formats/structure/mmcif";
 import {
-  Model,
   QueryContext,
   StructureSelection,
 } from "molstar/lib/mol-model/structure";
@@ -25,7 +25,6 @@ import { compile } from "molstar/lib/mol-script/runtime/query/base";
 import { ElementSymbolColorThemeProvider } from "molstar/lib/mol-theme/color/element-symbol";
 import { PhysicalSizeThemeProvider } from "molstar/lib/mol-theme/size/physical";
 import { Color as MolstarColor } from "molstar/lib/mol-util/color";
-import { MembraneOrientation3D } from "molstar/lib/extensions/anvil/behavior";
 import { BehaviorSubject, combineLatest, Observable, Subscription } from "rxjs";
 import {
   SbNcbrPartialCharges,
@@ -220,7 +219,7 @@ export class ContextModel {
   }
 
   async load(url: string) {
-    this.state.loadingStatus.next({ kind: "loading" });
+    this.state.loadingStatus.next({ kind: "loading", what: "structure" });
 
     await this.plugin.clear();
 
@@ -471,7 +470,7 @@ export class ContextModel {
   }
 
   private async updateType(name: Type["name"]) {
-    this.state.loadingStatus.next({ kind: "loading" });
+    this.state.loadingStatus.next({ kind: "loading", what: "view" });
 
     await this.plugin.dataTransaction(async () => {
       for (const structure of this.plugin.managers.structure.hierarchy.current
@@ -530,7 +529,7 @@ export class ContextModel {
   }
 
   private async updateColor(name: Color["name"], params: Color["params"] = {}) {
-    this.state.loadingStatus.next({ kind: "loading" });
+    this.state.loadingStatus.next({ kind: "loading", what: "coloring" });
 
     await this.plugin.dataTransaction(async () => {
       for (const structure of this.plugin.managers.structure.hierarchy.current
