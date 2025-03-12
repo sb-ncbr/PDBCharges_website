@@ -30,6 +30,7 @@ import { BehaviorSubject, Observable, Subscription } from "rxjs";
 import {
   SbNcbrPartialCharges,
   SbNcbrPartialChargesColorThemeProvider,
+  SbNcbrPartialChargesPreset,
   SbNcbrPartialChargesPropertyProvider,
 } from "../charges-extension";
 import {
@@ -89,6 +90,10 @@ export class ContextModel {
       config: [
         ...(defaultSpec.config ?? []),
         [PluginConfig.Viewport.ShowAnimation, false],
+        [
+          PluginConfig.Structure.DefaultRepresentationPreset,
+          SbNcbrPartialChargesPreset.id,
+        ],
       ],
     };
 
@@ -142,17 +147,17 @@ export class ContextModel {
     );
     await this.plugin.builders.structure.hierarchy.applyPreset(
       trajectory,
-      "default",
-      {
-        showUnitcell: false,
-        representationPreset: "auto",
-        representationPresetParams: {
-          theme: {
-            globalName: this.elementSymbolColorProps.name,
-            carbonColor: "chain-id",
-          },
-        },
-      }
+      "default"
+      // {
+      //   showUnitcell: false,
+      //   representationPreset: "auto",
+      //   representationPresetParams: {
+      //     theme: {
+      //       globalName: this.elementSymbolColorProps.name,
+      //       carbonColor: "chain-id",
+      //     },
+      //   },
+      // }
     );
 
     await this.setInitialRepresentationState();
@@ -272,7 +277,11 @@ export class ContextModel {
         cell = result;
       }
 
-      setSubtreeVisibility(this.plugin.state.data, cell.transform.ref, !visible);
+      setSubtreeVisibility(
+        this.plugin.state.data,
+        cell.transform.ref,
+        !visible
+      );
     },
   };
 
