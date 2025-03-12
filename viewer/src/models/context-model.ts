@@ -25,6 +25,7 @@ import { compile } from "molstar/lib/mol-script/runtime/query/base";
 import { ElementSymbolColorThemeProvider } from "molstar/lib/mol-theme/color/element-symbol";
 import { PhysicalSizeThemeProvider } from "molstar/lib/mol-theme/size/physical";
 import { Color as MolstarColor } from "molstar/lib/mol-util/color";
+import { MembraneOrientation3D } from "molstar/lib/extensions/anvil/behavior";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
 import {
   SbNcbrPartialCharges,
@@ -252,6 +253,26 @@ export class ContextModel {
     },
     setWaterVisibility: (visible: boolean) => {
       this.hideWater(visible);
+    },
+    showMembraneOrientation: async (visible: boolean) => {
+      let cell = this.plugin.state.data.selectQ((q) =>
+        q.root.withTag("membrane-orientation-3d")
+      )[0];
+      console.log(cell);
+      if (!cell) {
+        const result = await this.loadMembraneOrientation(visible);
+        if (!result) {
+          PluginCommands.Toast.Show(this.plugin, {
+            title: "Error",
+            message: "Failed to create membrane orientation.",
+            timeoutMs: 2000,
+          });
+          return;
+        }
+        cell = result;
+      }
+
+      setSubtreeVisibility(this.plugin.state.data, cell.transform.ref, !visible);
     },
   };
 
@@ -619,5 +640,27 @@ export class ContextModel {
       }
     }
     return false;
+  }
+
+  async loadMembraneOrientation(visible: boolean = true) {
+    const structure =
+      this.plugin.managers.structure.hierarchy.current.structures[0]?.cell;
+
+    if (!structure) {
+      console.error("Missing structure");
+      return;
+    }
+    const result = await this.plugin.state.data
+      .build()
+      .to(structure)
+      .applyOrUpdateTagged(
+        "membrane-orientation-3d",
+        MembraneOrientation3D,
+        {},
+        { state: { isHidden: !visible } }
+      )
+      .commit({ revertOnError: true });
+
+    return result.cell;
   }
 }

@@ -25,8 +25,10 @@ npm run watch
 2. Create symlinks to build files
 
 ```sh
-ln -s dist/molstar.js ../app/static/molstar/molstar.js
-ln -s dist/molstar.css ../app/static/molstar/molstar.css
+cd ../app/static/molstar/
+rm -rf molstar.js molstar.css
+ln -s ../../../viewer/dist/molstar.js molstar.js
+ln -s ../../../viewer/dist/molstar.css molstar.css
 ```
 
 ## Testing color smoothing

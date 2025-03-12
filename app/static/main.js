@@ -18,6 +18,7 @@ async function load(structure_url, warnings) {
   await molstar.load(structure_url);
 
   await molstar.type.default();
+  await molstar.type.showMembraneOrientation(true);
   await molstar.behavior.setWarnings(warnings);
 
   resetRange();
@@ -31,15 +32,21 @@ function mountTypeControls() {
   const surface = document.getElementById("view_surface");
   const bas = document.getElementById("view_bas");
   const showWater = document.getElementById("show_water");
+  const showMembrane = document.getElementById("show_membrane_orientation");
   
-  if (!cartoon || !surface || !bas || !showWater) return;
+  if (!cartoon || !surface || !bas || !showWater || !showMembrane) {
+    console.error("View controls not found");
+    return;
+  };
   
   cartoon.onclick = async () => await updateDefaultType();
   surface.onclick = async () => await updateSurfaceType();
   bas.onclick = async () => await updateBallAndStickType();
   showWater.onclick = async (e) => await updateShowWater(e.target.checked);
+  showMembrane.onclick = async (e) => await updateShowMembrane(e.target.checked);
 
   showWater.parentElement.style.visibility = molstar.type.hasWater() ? 'visible' : 'hidden'
+  showMembrane.parentElement.style.visibility = 'visible'
 
   // molstar.state.loadingStatus.subscribe((loadingStatus) => {    
   //   cartoon.disabled = loadingStatus.kind === 'loading'
@@ -61,8 +68,12 @@ async function updateBallAndStickType() {
   await molstar.type.ballAndStick();
 }
 
-async function updateShowWater(hidden) {
-  await molstar.type.setWaterVisibility(hidden);
+async function updateShowWater(visible) {
+  await molstar.type.setWaterVisibility(visible);
+}
+
+async function updateShowMembrane(visible) {
+  await molstar.type.showMembraneOrientation(visible);
 }
 
 function mountColorControls() {
