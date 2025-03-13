@@ -16,7 +16,7 @@ export function erf(x: number) {
   return sign * y;
 }
 
-// np.round(x) + erf((x - np.round(x))*5) * 0.5
+// TODO: edit this function
 export function smoothCharge(x: number) {
   const rounded = Math.round(x);
   return rounded + erf((x - rounded) * 5) * 0.5;
