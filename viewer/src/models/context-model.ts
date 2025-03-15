@@ -74,7 +74,7 @@ export class ContextModel {
     range: new BehaviorSubject<number>(0),
     showWater: new BehaviorSubject<boolean>(true),
     hasWater: new BehaviorSubject<boolean>(true),
-    showMembrane: new BehaviorSubject<boolean>(true),
+    showMembrane: new BehaviorSubject<boolean>(false),
     useSmoothing: new BehaviorSubject<boolean>(false),
   };
 

@@ -19,5 +19,5 @@ export function erf(x: number) {
 // TODO: edit this function
 export function smoothCharge(x: number) {
   const rounded = Math.round(x);
-  return rounded + erf((x - rounded) * 5) * 0.5;
+  return rounded + erf((x - rounded) * 6.5) * 0.5;
 }
