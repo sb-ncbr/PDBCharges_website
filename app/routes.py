@@ -24,52 +24,53 @@ def log_access(request, code):
 
 def download_data(code):
     data_dir = f'{root_dir}/calculated_structures/{code}'
-    os.system(f"mkdir {data_dir}")
-    s3_url = "https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges"
-    for file in [f"{code}.cif", f"output.txt", f"residual_warnings.json"]:
-        response = requests.get(f'{s3_url}/{code}/{file}')
-        if response.status_code == 200:
-            with open(f'{data_dir}/{file}', 'w') as pdb_file:
-                pdb_file.write(response.text)
+    if not os.path.isdir(data_dir):
+        os.system(f"mkdir {data_dir}")
+        s3_url = "https://s3.cl4.du.cesnet.cz/46b646c0_b0c7_45dd_8c7f_29536a545ca7:ceitec-biodata-pdbcharges"
+        for file in [f"{code}.cif", f"output.txt", f"residual_warnings.json"]:
+            response = requests.get(f'{s3_url}/{code}/{file}')
+            if response.status_code == 200:
+                with open(f'{data_dir}/{file}', 'w') as pdb_file:
+                    pdb_file.write(response.text)
 
-    # modify residual warnings because of Mol*
-    residual_warnings_file = f'{root_dir}/calculated_structures/{code}/residual_warnings.json'
-    cif_file = f'{root_dir}/calculated_structures/{code}/{code}.cif'
-    residual_warnings_exist = os.path.exists(residual_warnings_file)
-    cif_file_exist = os.path.exists(cif_file)
-    if residual_warnings_exist and cif_file_exist:
+        # modify residual warnings because of Mol*
+        residual_warnings_file = f'{root_dir}/calculated_structures/{code}/residual_warnings.json'
+        cif_file = f'{root_dir}/calculated_structures/{code}/{code}.cif'
+        residual_warnings_exist = os.path.exists(residual_warnings_file)
+        cif_file_exist = os.path.exists(cif_file)
+        if residual_warnings_exist and cif_file_exist:
 
-        doc = cif.read_file(cif_file)
-        block = doc.sole_block()
-        cif_data = set(zip(block.find_loop("_atom_site.label_comp_id"),
-                           block.find_loop("_atom_site.auth_seq_id"),
-                           block.find_loop("_atom_site.label_seq_id"),
-                           block.find_loop("_atom_site.auth_asym_id"),
-                           block.find_loop("_atom_site.label_asym_id")))
+            doc = cif.read_file(cif_file)
+            block = doc.sole_block()
+            cif_data = set(zip(block.find_loop("_atom_site.label_comp_id"),
+                               block.find_loop("_atom_site.auth_seq_id"),
+                               block.find_loop("_atom_site.label_seq_id"),
+                               block.find_loop("_atom_site.auth_asym_id"),
+                               block.find_loop("_atom_site.label_asym_id")))
 
-        residues = defaultdict(list)
-        for residue in cif_data:
-            residues[residue[0]].append({"resnums": residue[1:3], "chains": residue[3:5]})
+            residues = defaultdict(list)
+            for residue in cif_data:
+                residues[residue[0]].append({"resnums": residue[1:3], "chains": residue[3:5]})
 
-        # load warning json file
-        with open(residual_warnings_file) as warnings_file:
-            warnings = json.load(warnings_file)
+            # load warning json file
+            with open(residual_warnings_file) as warnings_file:
+                warnings = json.load(warnings_file)
 
-        modified_warnings = []
-        for warning in warnings:
-            matching_residues = []
-            for residue in residues[warning["residue_name"]]:
-                if str(warning["residue_id"]) in residue["resnums"] and str(warning["chain_id"]) in residue["chains"]:
-                    matching_residues.append(residue)
-            if len(matching_residues) == 1:
-                modified_warnings.append({"auth_seq_id": matching_residues[0]["resnums"][0],
-                                          "label_seq_id": matching_residues[0]["resnums"][1],
-                                          "auth_asym_id": matching_residues[0]["chains"][0],
-                                          "label_asym_id": matching_residues[0]["chains"][1],
-                                          "residue_name": warning["residue_name"], "warning": warning["warning"]})
+            modified_warnings = []
+            for warning in warnings:
+                matching_residues = []
+                for residue in residues[warning["residue_name"]]:
+                    if str(warning["residue_id"]) in residue["resnums"] and str(warning["chain_id"]) in residue["chains"]:
+                        matching_residues.append(residue)
+                if len(matching_residues) == 1:
+                    modified_warnings.append({"auth_seq_id": matching_residues[0]["resnums"][0],
+                                              "label_seq_id": matching_residues[0]["resnums"][1],
+                                              "auth_asym_id": matching_residues[0]["chains"][0],
+                                              "label_asym_id": matching_residues[0]["chains"][1],
+                                              "residue_name": warning["residue_name"], "warning": warning["warning"]})
 
-        with open(f'{root_dir}/calculated_structures/{code}/modified_residual_warnings.json', 'w') as modified_warning_file:
-            modified_warning_file.write(json.dumps(modified_warnings, indent=4))
+            with open(f'{root_dir}/calculated_structures/{code}/modified_residual_warnings.json', 'w') as modified_warning_file:
+                modified_warning_file.write(json.dumps(modified_warnings, indent=4))
 
 
 
@@ -77,17 +78,13 @@ def download_data(code):
 def main_site():
     if request.method == 'POST':
         code = request.form['code'].strip().lower()
-        data_dir = f'{root_dir}/calculated_structures/{code}'
-        if not os.path.isdir(data_dir):
-            download_data(code)
+        download_data(code)
         if not os.path.exists(f'{root_dir}/calculated_structures/{code}/{code}.cif'):
             log_access(request, code)
-            message = Markup(
-                f'There is no results for structure with PDB ID <strong>{code}</strong>. The possible causes are:'
-                f'<ul> '
-                f'<li>A structure with such a PDB ID does not exist.</li>'
-                f'<li>The structure with hydrogens has more than 99999 atoms.</li>'
-                f'<li>The structure contains serious errors and cannot be used as input for calculating the partial atomic charge.</li></ul>  ')
+            if requests.head(f"https://www.rcsb.org/structure/{code}").status_code != 200:
+                message = Markup(f"The structure with PDB ID <strong>{code}</strong> is not found in Protein Data Bank.")
+            else:
+                message = Markup(f"Parcial atomic charges cannot be provided, because molecule is not processable by MoleculeKit library.")
             flash(message, 'warning')
             return render_template('index.html')
 
@@ -99,20 +96,22 @@ def main_site():
 def results():
     code = request.args.get('code').lower()
     log_access(request, code)
-    data_dir = f'{root_dir}/calculated_structures/{code}'
-    if not os.path.isdir(data_dir):
-        download_data(code)
+    download_data(code)
     if not os.path.exists(f'{root_dir}/calculated_structures/{code}/{code}.cif'):
-        message = Markup(
-            f'There is no results for structure with PDB ID <strong>{code}</strong>. The possible causes are:'
-            f'<ul> '
-            f'<li>A structure with such a PDB ID does not exist.</li>'
-            f'<li>The structure with hydrogens has more than 99999 atoms.</li>'
-            f'<li>The structure contains serious errors and cannot be used as input for calculating the partial atomic charge.</li></ul>  ')
+        if requests.head(f"https://www.rcsb.org/structure/{code}").status_code != 200:
+            message = Markup(f"The structure with PDB ID <strong>{code}</strong> is not found in Protein Data Bank.")
+        else:
+            message = Markup(f"Parcial atomic charges cannot be provided, because molecule is not processable by MoleculeKit library.")
         flash(message, 'warning')
-        return render_template('results.html', code="None", n_ats="None", total_charge="None",
+        return render_template('results.html',
+                               code="None",
+                               n_ats="None",
+                               total_charge="None",
+                               warnings=json.loads("{}"),
+                               modified_warnings=json.loads("{}"),
                                num_of_non_charge_atoms="None")
 
+    data_dir = f'{root_dir}/calculated_structures/{code}'
     with open(f"{data_dir}/{code}.cif", "r") as cif_file:
         charges = []
         lines = [line.strip() for line in cif_file.readlines()[::-1]]
