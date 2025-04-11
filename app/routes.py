@@ -40,6 +40,17 @@ def download_data(code):
         cif_file_exist = os.path.exists(cif_file)
         if residual_warnings_exist and cif_file_exist:
 
+            # remove fake residue and chain ids caused by biopython
+            structure = cif.read_file(cif_file)
+            block = structure.sole_block()
+            atoms = block.find_mmcif_category("_atom_site.")
+            for i, value in enumerate(atoms.find_column("auth_asym_id")):
+                atoms[i]["label_asym_id"] = value
+            for i, value in enumerate(atoms.find_column("auth_seq_id")):
+                atoms[i]["label_seq_id"] = value
+            structure.write_file(cif_file)
+
+            # needs refactor, modified residual warnings no more needen
             doc = cif.read_file(cif_file)
             block = doc.sole_block()
             cif_data = set(zip(block.find_loop("_atom_site.label_comp_id"),
@@ -47,15 +58,11 @@ def download_data(code):
                                block.find_loop("_atom_site.label_seq_id"),
                                block.find_loop("_atom_site.auth_asym_id"),
                                block.find_loop("_atom_site.label_asym_id")))
-
             residues = defaultdict(list)
             for residue in cif_data:
                 residues[residue[0]].append({"resnums": residue[1:3], "chains": residue[3:5]})
-
-            # load warning json file
             with open(residual_warnings_file) as warnings_file:
                 warnings = json.load(warnings_file)
-
             modified_warnings = []
             for warning in warnings:
                 matching_residues = []
@@ -68,7 +75,6 @@ def download_data(code):
                                               "auth_asym_id": matching_residues[0]["chains"][0],
                                               "label_asym_id": matching_residues[0]["chains"][1],
                                               "residue_name": warning["residue_name"], "warning": warning["warning"]})
-
             with open(f'{root_dir}/calculated_structures/{code}/modified_residual_warnings.json', 'w') as modified_warning_file:
                 modified_warning_file.write(json.dumps(modified_warnings, indent=4))
 
@@ -81,10 +87,13 @@ def main_site():
         download_data(code)
         if not os.path.exists(f'{root_dir}/calculated_structures/{code}/{code}.cif'):
             log_access(request, code)
-            if requests.head(f"https://www.rcsb.org/structure/{code}").status_code != 200:
+            if requests.head(f"https://www.rcsb.org/structure/{code.upper()}").status_code != 200:
                 message = Markup(f"The structure with PDB ID <strong>{code}</strong> is not found in Protein Data Bank.")
+            elif os.path.exists(f'{root_dir}/calculated_structures/{code}/output.txt'):
+                with open(f'{root_dir}/calculated_structures/{code}/output.txt', "r") as output_file:
+                    message = output_file.readlines()[-1]
             else:
-                message = Markup(f"Parcial atomic charges cannot be provided, because molecule is not processable by MoleculeKit library.")
+                message = Markup(f"Parcial atomic charges cannot be provided for structure PDB ID <strong>{code}</strong>.")
             flash(message, 'warning')
             return render_template('index.html')
 
@@ -98,10 +107,7 @@ def results():
     log_access(request, code)
     download_data(code)
     if not os.path.exists(f'{root_dir}/calculated_structures/{code}/{code}.cif'):
-        if requests.head(f"https://www.rcsb.org/structure/{code}").status_code != 200:
-            message = Markup(f"The structure with PDB ID <strong>{code}</strong> is not found in Protein Data Bank.")
-        else:
-            message = Markup(f"Parcial atomic charges cannot be provided, because molecule is not processable by MoleculeKit library.")
+        message = Markup(f"No results available for structure with PDB ID <strong>{code}</strong>.")
         flash(message, 'warning')
         return render_template('results.html',
                                code="None",
@@ -154,14 +160,16 @@ def download_files():
         txt_file.write(f"{code}\n{' '.join(charges)}")
 
     # create pqr file
+    from time import time
+    t= time()
     obConversion = openbabel.OBConversion()
     obConversion.SetInAndOutFormats("cif", "pqr")
     mol = openbabel.OBMol()
     obConversion.ReadFile(mol, f'{data_dir}/{code}.cif')
     obConversion.WriteFile(mol, f'{data_dir}/{code}.pqr')
+    print(time() - t)
 
-
-    with open(f'{data_dir}/{code}.pqr') as pqr_file:
+    with open(f'{data_dir}/{code}.pqr', "rb") as pqr_file:
         pqr_file_lines = pqr_file.readlines()
     c = 0
     new_lines = []
@@ -176,8 +184,9 @@ def download_files():
             c += 1
         else:
             new_lines.append(line)
-    with open(f'{data_dir}/{code}.pqr', "w") as pqr_file:
-        pqr_file.write(''.join(new_lines))
+    with open(f'{data_dir}/{code}.pqr', "wb") as pqr_file:
+        pqr_file.write(b''.join(new_lines))
+    print(time() - t)
 
     try:
         with zipfile.ZipFile(f'{data_dir}/{code}_charges.zip', 'w') as zip:
