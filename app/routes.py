@@ -160,33 +160,31 @@ def download_files():
         txt_file.write(f"{code}\n{' '.join(charges)}")
 
     # create pqr file
-    from time import time
-    t= time()
-    obConversion = openbabel.OBConversion()
-    obConversion.SetInAndOutFormats("cif", "pqr")
-    mol = openbabel.OBMol()
-    obConversion.ReadFile(mol, f'{data_dir}/{code}.cif')
-    obConversion.WriteFile(mol, f'{data_dir}/{code}.pqr')
-    print(time() - t)
+    if not os.path.exists(f'{data_dir}/{code}.pqr'):
+        obConversion = openbabel.OBConversion()
+        obConversion.SetInAndOutFormats("cif", "pqr")
+        mol = openbabel.OBMol()
+        obConversion.ReadFile(mol, f'{data_dir}/{code}.cif')
+        obConversion.WriteFile(mol, f'{data_dir}/{code}.pqr')
 
-    with open(f'{data_dir}/{code}.pqr', "rb") as pqr_file:
-        pqr_file_lines = pqr_file.readlines()
-    c = 0
-    new_lines = []
-    for line in pqr_file_lines:
-        if line[:4] == b'ATOM':
-            charge = charges[c]
-            try:
-                charge = float(charge)
-                new_lines.append(line[:54] + bytes('{:>8.4f}'.format(charge), encoding='utf8') + line[62:])
-            except ValueError:
-                new_lines.append(line[:54] + b'  ?         ' + line[66:])
-            c += 1
-        else:
-            new_lines.append(line)
-    with open(f'{data_dir}/{code}.pqr', "wb") as pqr_file:
-        pqr_file.write(b''.join(new_lines))
-    print(time() - t)
+        with open(f'{data_dir}/{code}.pqr', "r") as pqr_file:
+            pqr_file_lines = pqr_file.readlines()
+        c = 0
+        new_lines = []
+        for line in pqr_file_lines:
+            if line[:4] == 'ATOM':
+                charge = charges[c]
+                try:
+                    charge = round(float(charge), 4)
+                    print(charge)
+                    new_lines.append(line[:54] + '{:>8.4f}0000'.format(charge) + line[66:])
+                except ValueError:
+                    new_lines.append(line[:54] + '  ?         ' + line[66:])
+                c += 1
+            else:
+                new_lines.append(line)
+        with open(f'{data_dir}/{code}.pqr', "w") as pqr_file:
+            pqr_file.write(''.join(new_lines))
 
     try:
         with zipfile.ZipFile(f'{data_dir}/{code}_charges.zip', 'w') as zip:
