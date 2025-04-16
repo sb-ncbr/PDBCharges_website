@@ -91,7 +91,7 @@ def main_site():
                 message = Markup(f"The structure with PDB ID <strong>{code}</strong> is not found in Protein Data Bank.")
             elif os.path.exists(f'{root_dir}/calculated_structures/{code}/output.txt'):
                 with open(f'{root_dir}/calculated_structures/{code}/output.txt', "r") as output_file:
-                    message = output_file.readlines()[-1]
+                    message = Markup(f"ERROR! The structure with PDB ID <strong>{code}</strong> is not processable by MoleculeKit library.")
             else:
                 message = Markup(f"Parcial atomic charges cannot be provided for structure PDB ID <strong>{code}</strong>.")
             flash(message, 'warning')
@@ -174,13 +174,13 @@ def download_files():
     c = 0
     new_lines = []
     for line in pqr_file_lines:
-        if line[:4] == 'ATOM':
+        if line[:4] == b'ATOM':
             charge = charges[c]
             try:
                 charge = float(charge)
-                new_lines.append(line[:54] + '{:>8.4f}'.format(charge) + line[62:])
+                new_lines.append(line[:54] + bytes('{:>8.4f}'.format(charge), encoding='utf8') + line[62:])
             except ValueError:
-                new_lines.append(line[:54] + '  ?         ' + line[66:])
+                new_lines.append(line[:54] + b'  ?         ' + line[66:])
             c += 1
         else:
             new_lines.append(line)
