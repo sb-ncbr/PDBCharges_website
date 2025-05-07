@@ -18,18 +18,24 @@ Then, clone project and install the project dependencies by running:
 ```bash
 $ cd /opt
 $ git clone https://github.com/sb-ncbr/PDBCharges
-$ pyenv local
 $ pyenv exec python -m venv venv
 $ . venv/bin/activate
 $ pip install -r requirements.txt
 ```
 Run the project by running the following command inside the virtual environment:
 
+1. Development
+```shell
+flask --app app/routes.py --debug run
+```
+
+2. Production
 ```bash
 (venv) $ cd /opt/PDBCharges/app
 (venv) $ export FLASK_APP=routes.py
 (venv) $ flask run
 ```
+
 and point your browser to localhost:5000/.
 
 ## License
