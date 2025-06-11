@@ -32,5 +32,10 @@ Run the project by running the following command inside the virtual environment:
 ```
 and point your browser to localhost:5000/.
 
+## How to cite
+
+If you found PDBCharges helpful, please cite: [Schindler, O., Svoboda, T., Rošinec, A., Raček, T., Bučeková, G., Tichý, D., Berka, K., & Svobodová, R. (2025). PDBCharges: Quantum-Mechanical Partial Atomic Charges for PDB Structures. Nucleic Acids Research.](https://academic.oup.com/nar/article/doi/10.1093/nar/gkaf401/8128216)
+
+
 ## License
 MIT
