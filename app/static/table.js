@@ -98,7 +98,7 @@ function displayData(warnings) {
     currentData.forEach(item => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${item.label_asym_id} <small>[auth ${item.auth_asym_id}]</small></td>
+            <td>${item.label_asym_id}</td>
             <td>${item.auth_seq_id}</td>
             <td>${item.residue_name}</td>
             <td title='${item.warning}'>${item.warning}</td>
