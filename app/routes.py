@@ -33,25 +33,50 @@ def download_data(code):
                 with open(f'{data_dir}/{file}', 'w') as pdb_file:
                     pdb_file.write(response.text)
 
-        # modify residual warnings because of Mol*
         residual_warnings_file = f'{root_dir}/calculated_structures/{code}/residual_warnings.json'
-        cif_file = f'{root_dir}/calculated_structures/{code}/{code}.cif'
+        cif_file_path = f'{root_dir}/calculated_structures/{code}/{code}.cif'
         residual_warnings_exist = os.path.exists(residual_warnings_file)
-        cif_file_exist = os.path.exists(cif_file)
+        cif_file_exist = os.path.exists(cif_file_path)
+
+        # generate cif file without waters
+        with open(cif_file_path, "r") as cif_file:
+            lines_without_HOH = []
+            indices_of_HOH = set()
+            atom_counter = -1
+            cif_file_lines = cif_file.readlines()
+            for line in cif_file_lines:
+                sl = line.strip().split()
+                if len(sl) and sl[0] in ["HETATM", "ATOM"]:
+                    atom_counter += 1
+                    if sl[5] == "HOH":
+                        indices_of_HOH.add(atom_counter)
+                        continue
+                lines_without_HOH.append(line)
+                if sl == ["_sb_ncbr_partial_atomic_charges.charge"]:
+                    break
+
+            for i, line in enumerate(cif_file_lines[-(atom_counter + 1):]):
+                if i not in indices_of_HOH:
+                    lines_without_HOH.append(line)
+
+        with open(f"{cif_file_path[:-4]}_without_HOH.cif", "w") as cif_file_without_HOH:
+            cif_file_without_HOH.write("".join(lines_without_HOH))
+
+        # modify residual warnings because of Mol*
         if residual_warnings_exist and cif_file_exist:
 
             # remove fake residue and chain ids caused by biopython
-            structure = cif.read_file(cif_file)
+            structure = cif.read_file(cif_file_path)
             block = structure.sole_block()
             atoms = block.find_mmcif_category("_atom_site.")
             for i, value in enumerate(atoms.find_column("auth_asym_id")):
                 atoms[i]["label_asym_id"] = value
             for i, value in enumerate(atoms.find_column("auth_seq_id")):
                 atoms[i]["label_seq_id"] = value
-            structure.write_file(cif_file)
+            structure.write_file(cif_file_path)
 
             # needs refactor, modified residual warnings no more needen
-            doc = cif.read_file(cif_file)
+            doc = cif.read_file(cif_file_path)
             block = doc.sole_block()
             cif_data = set(zip(block.find_loop("_atom_site.label_comp_id"),
                                block.find_loop("_atom_site.auth_seq_id"),
@@ -176,7 +201,6 @@ def download_files():
                 charge = charges[c]
                 try:
                     charge = round(float(charge), 4)
-                    print(charge)
                     new_lines.append(line[:54] + '{:>8.4f}0000'.format(charge) + line[66:])
                 except ValueError:
                     new_lines.append(line[:54] + '  ?         ' + line[66:])
@@ -200,6 +224,11 @@ def download_files():
 @application.route('/structure/<code>')
 def get_structure(code: str):
     filepath = f'{root_dir}/calculated_structures/{code}/{code}.cif'
+    return Response(open(filepath, 'r').read(), mimetype='text/plain')
+
+@application.route('/structure_without_HOH/<code>')
+def get_structure_without_HOH(code: str):
+    filepath = f'{root_dir}/calculated_structures/{code}/{code}_without_HOH.cif'
     return Response(open(filepath, 'r').read(), mimetype='text/plain')
 
 @application.errorhandler(404)
